@@ -41,7 +41,7 @@ interface SubmissionData {
 export default function MyStatsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const name = searchParams.get('name');
+  const name = searchParams?.get('name') ?? null;
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
