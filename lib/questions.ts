@@ -9,21 +9,6 @@ import { ModelAnswer, Question } from './types';
 const answersDir = path.join(process.cwd(), '_answers');
 const baseUrl = process.env.BASE_URL || '';
 
-// Helper function to recursively copy a directory
-const copyDirSync = (src: string, dest: string) => {
-  fs.mkdirSync(dest, { recursive: true });
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDirSync(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  }
-};
-
 // 将 BASE_URL 替换为更通用的 BASE_PATH，并兼容老的 BASE_URL
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || process.env.BASE_URL || '';
 
@@ -53,16 +38,6 @@ export async function getAllQuestions(): Promise<Question[]> {
     questionDirs.map(async (dirName) => {
       const questionId = dirName.split('-')[1];
       const questionDir = path.join(answersDir, dirName);
-
-      // --- Start of Image Handling Logic ---
-      const questionImagesDir = path.join(questionDir, 'images');
-      const publicVendorDir = path.join(process.cwd(), 'public', 'vendor', `question-${questionId}`, 'images');
-      
-      // Copy images to public directory if they exist
-      if (fs.existsSync(questionImagesDir)) {
-        copyDirSync(questionImagesDir, publicVendorDir);
-      }
-      // --- End of Image Handling Logic ---
 
       const questionTextPath = path.join(questionDir, 'question.txt');
       const questionText = fs.readFileSync(questionTextPath, 'utf8').trim();
