@@ -1,6 +1,6 @@
-import { getAllQuestions } from '@/lib/questions';
+import { getAllQuestions, getQuestionsForBucket } from '@/lib/questions';
 import EvaluationClient from '@/app/components/EvaluationClient';
-import { seededShuffle, allocateQuestions } from '@/lib/utils';
+import { seededShuffle } from '@/lib/utils';
 import { Question } from '@/lib/types';
 
 interface PageProps {
@@ -19,23 +19,27 @@ export default async function EvaluatePage({ searchParams }: PageProps) {
     );
   }
 
-  const userParam = resolvedSearchParams.user;
+  const bucketParam = resolvedSearchParams.bucket;
   const idsParam = resolvedSearchParams.ids;
   const seed = resolvedSearchParams.seed;
   const countParam = resolvedSearchParams.count;
 
   let questionsToDisplay: Question[];
 
-  if (idsParam) {
+  if (bucketParam !== undefined) {
+    const bucketIndex = parseInt(Array.isArray(bucketParam) ? bucketParam[0] : bucketParam, 10);
+    if (!isNaN(bucketIndex)) {
+      questionsToDisplay = getQuestionsForBucket(bucketIndex, allQuestions);
+    } else {
+      questionsToDisplay = allQuestions;
+    }
+  } else if (idsParam) {
     const idsString = Array.isArray(idsParam) ? idsParam[0] : idsParam;
     const ids = idsString.split(',').map(s => s.trim()).filter(Boolean);
     const questionMap = new Map(allQuestions.map(q => [q.id, q]));
     questionsToDisplay = ids
       .map(id => questionMap.get(id))
       .filter((q): q is Question => q !== undefined);
-  } else if (userParam) {
-    const userName = Array.isArray(userParam) ? userParam[0] : userParam;
-    questionsToDisplay = allocateQuestions(userName, allQuestions);
   } else if (seed) {
     const seedString = Array.isArray(seed) ? seed[0] : seed;
     const shuffled = seededShuffle(allQuestions, seedString);

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SelectQuestionsPage() {
   const router = useRouter();
+  const supabase = createClient();
   const [userInfo, setUserInfo] = useState<{ name: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,9 +19,64 @@ export default function SelectQuestionsPage() {
     setUserInfo(JSON.parse(storedUserInfo));
   }, [router]);
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (!userInfo) return;
     setIsLoading(true);
-    router.push(`/evaluate?user=${encodeURIComponent(userInfo!.name)}`);
+
+    try {
+      // 查询 submissions 表获取所有已提交用户（按创建时间排序）
+      const { data: submissions, error } = await supabase
+        .from('submissions')
+        .select('user_name, created_at')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('查询 submissions 失败:', error);
+        fallbackAllocation(userInfo.name);
+        return;
+      }
+
+      // 去重并按首次出现时间排序
+      const seen = new Set<string>();
+      const uniqueUsers: string[] = [];
+      for (const row of submissions || []) {
+        if (row.user_name && !seen.has(row.user_name)) {
+          seen.add(row.user_name);
+          uniqueUsers.push(row.user_name);
+        }
+      }
+
+      const existingIndex = uniqueUsers.indexOf(userInfo.name);
+      let bucketIndex: number;
+
+      if (existingIndex >= 0) {
+        // 已分配过：用原位置
+        bucketIndex = existingIndex % 10;
+      } else {
+        // 新用户：按全局 count 分配
+        bucketIndex = uniqueUsers.length % 10;
+      }
+
+      // 持久化到 localStorage
+      localStorage.setItem('fineval_bucket_index', String(bucketIndex));
+
+      // 跳转到 evaluate 页面
+      router.push(`/evaluate?bucket=${bucketIndex}`);
+    } catch (err) {
+      console.error('分配题包出错:', err);
+      fallbackAllocation(userInfo.name);
+    }
+  };
+
+  const fallbackAllocation = (name: string) => {
+    // 降级：用字符串哈希取模
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
+    }
+    const bucketIndex = Math.abs(hash) % 10;
+    localStorage.setItem('fineval_bucket_index', String(bucketIndex));
+    router.push(`/evaluate?bucket=${bucketIndex}`);
   };
 
   if (!userInfo) {

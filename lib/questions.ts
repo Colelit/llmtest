@@ -90,3 +90,27 @@ export async function getAllQuestions(): Promise<Question[]> {
 
   return allQuestionsData;
 }
+
+// Centralized bucket matrix: 10 packs, each with 9 dynamic question IDs.
+// 30 dynamic questions (IDs 2-58, first 30 after sorting) each appear exactly 3 times.
+export const BUCKET_MATRIX = [
+  ['2', '3', '4', '18', '20', '21', '39', '40', '43'],
+  ['5', '7', '8', '24', '25', '26', '46', '48', '50'],
+  ['13', '14', '16', '27', '29', '31', '53', '55', '57'],
+  ['17', '18', '20', '34', '39', '40', '58', '2', '3'],
+  ['4', '5', '7', '21', '24', '25', '43', '46', '48'],
+  ['8', '13', '14', '26', '27', '29', '50', '53', '55'],
+  ['16', '17', '18', '31', '34', '39', '57', '58', '2'],
+  ['3', '4', '5', '20', '21', '24', '40', '43', '46'],
+  ['7', '8', '13', '25', '26', '27', '48', '50', '53'],
+  ['14', '16', '17', '29', '31', '34', '55', '57', '58'],
+];
+
+export function getQuestionsForBucket(bucketIndex: number, allQuestions: Question[]): Question[] {
+  const pack = BUCKET_MATRIX[bucketIndex % BUCKET_MATRIX.length];
+  const questionIds = ['1', ...pack];
+  const questionMap = new Map(allQuestions.map(q => [q.id, q]));
+  return questionIds
+    .map(id => questionMap.get(id))
+    .filter((q): q is Question => q !== undefined);
+}
