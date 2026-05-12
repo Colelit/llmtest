@@ -1,0 +1,137 @@
+/* 金融研报风格 Markdown 样式表 */
+body {
+    font-family: "Times New Roman", "楷体", "KaiTi", "STKaiti", serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    padding: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* 标题层级 — 研报风格：紧凑、层次分明 */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+h1 {
+    font-size: 1.75em;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid #333;
+}
+
+h2 {
+    font-size: 1.4em;
+    margin-top: 1.5rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid #ccc;
+}
+
+h3 {
+    font-size: 1.15em;
+    margin-top: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #2c2c2c;
+}
+
+h4 { font-size: 1em; margin-top: 1rem; margin-bottom: 0.4rem; }
+h5 { font-size: 0.9em; margin-top: 0.8rem; margin-bottom: 0.3rem; }
+h6 { font-size: 0.85em; margin-top: 0.8rem; margin-bottom: 0.3rem; }
+
+p {
+    margin-bottom: 0.6rem;
+    text-align: justify;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+}
+
+ul, ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+li {
+    margin-bottom: 0.3rem;
+    line-height: 1.6;
+}
+
+code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    background-color: #f6f8fa;
+    padding: 0.2em 0.4em;
+    font-size: 85%;
+    border-radius: 4px;
+}
+
+pre {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    background-color: #f6f8fa;
+    padding: 1rem;
+    overflow: auto;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+pre code {
+    padding: 0;
+    font-size: 100%;
+    background-color: transparent;
+}
+
+/* 表格 — 专业研报风格：边框、表头灰色背景、居中 */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1.25rem;
+    font-size: 0.95em;
+    border: 1.5px solid #999;
+}
+
+th, td {
+    border: 1px solid #bbb;
+    padding: 0.55em 0.85em;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    font-weight: 600;
+    background-color: #e8e8e8;
+    color: #222;
+}
+
+tr:nth-child(even) td {
+    background-color: #f9f9f9;
+}
+
+tr:hover td {
+    background-color: #f0f0f0;
+}
+
+/* 复选框文本优化 — 行高和字间距 */
+input[type="checkbox"] {
+    margin-right: 0.35em;
+    vertical-align: middle;
+}
+
+/* 针对包含特殊符号（如 □）的文本行优化 */
+p, td, li {
+    letter-spacing: 0.01em;
+}
+
+blockquote {
+    border-left: 0.25em solid #dfe2e5;
+    padding: 0 1em;
+    color: #6a737d;
+    margin-left: 0;
+    margin-bottom: 1rem;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}

@@ -1,0 +1,219 @@
+{
+  "main": {
+    "id": "d2d7ef334a11fa52",
+    "type": "split",
+    "children": [
+      {
+        "id": "85052d9fddd4f7a4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b6e7c08e34aeb47d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "question-1/model-a.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "model-a"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "618714cbcbfb978f",
+    "type": "split",
+    "children": [
+      {
+        "id": "be30b5442e6c5adf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "440bc7f9b25d876f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "ec7c73de184e7358",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "6eb088834c2d8767",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "f0e602a485584f30",
+    "type": "split",
+    "children": [
+      {
+        "id": "e9a4277a2079f27b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ece987f525a4a8b9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "question-1/model-a.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "model-a 的反向链接列表"
+            }
+          },
+          {
+            "id": "ee986315e822cb3d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "question-1/model-a.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "model-a 的出链列表"
+            }
+          },
+          {
+            "id": "5eedf3d5a6827df1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "697225927bf22b02",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "question-1/model-a.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "model-a 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "b6e7c08e34aeb47d",
+  "lastOpenFiles": [
+    "question-10/model-b.md",
+    "Pasted image 20250711143056.png",
+    "question-10/model-c.md",
+    "question-10/model-a.md",
+    "question-10/images/蚂小财.jpg",
+    "question-10/model-h.md",
+    "question-10/model-g.md",
+    "question-10/model-f.md",
+    "question-10/model-e.md",
+    "question-10/model-d.md",
+    "question-2/model-e.md",
+    "question-2/model-d.md",
+    "question-2/model-c.md",
+    "question-2/model-b.md",
+    "question-2/model-a.md",
+    "question-10/images",
+    "question-10/新建文件夹",
+    "question-9/model-h.md",
+    "question-10/question.txt",
+    "question-10/新建 文本文档.txt",
+    "question-10/新建 Markdown.md",
+    "question-10",
+    "新建文件夹",
+    "question-9/model-g.md",
+    "question-9/model-f.md",
+    "question-9/model-e.md",
+    "question-9/model-d.md",
+    "question-9/model-c.md",
+    "question-9/model-b.md",
+    "question-9/model-a.md",
+    "question-8/model-h.md",
+    "question-9/新建 Markdown.md",
+    "question-9/question.txt",
+    "question-9/新建 文本文档.txt",
+    "question-9",
+    "ｑｕｅｓｔｉｏｎ－９",
+    "question-8/model-f.md",
+    "question-7/images/蚂小财.jpg",
+    "question-5/images/妙想.png",
+    "question-5/妙想.png",
+    "question-5/images/蚂小财.jpg",
+    "question-5/images/问财.png",
+    "question-5/images/ChatGPT.png",
+    "question-3/images/蚂小财.jpg",
+    "question-2/images/蚂小财.jpg"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat /tmp/next-dev.log | tail -20)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
