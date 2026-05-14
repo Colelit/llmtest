@@ -18,34 +18,37 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 1.75em;
     margin-top: 0;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
     padding-bottom: 0.4rem;
     border-bottom: 2px solid #333;
+    letter-spacing: 0.02em;
 }
 
 h2 {
     font-size: 1.4em;
-    margin-top: 1.5rem;
-    margin-bottom: 0.6rem;
+    margin-top: 1.2rem;
+    margin-bottom: 0.5rem;
     padding-bottom: 0.3rem;
     border-bottom: 1px solid #ccc;
+    letter-spacing: 0.015em;
 }
 
 h3 {
     font-size: 1.15em;
-    margin-top: 1.2rem;
-    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
     color: #2c2c2c;
+    letter-spacing: 0.01em;
 }
 
-h4 { font-size: 1em; margin-top: 1rem; margin-bottom: 0.4rem; }
-h5 { font-size: 0.9em; margin-top: 0.8rem; margin-bottom: 0.3rem; }
-h6 { font-size: 0.85em; margin-top: 0.8rem; margin-bottom: 0.3rem; }
+h4 { font-size: 1em; margin-top: 0.8rem; margin-bottom: 0.35rem; letter-spacing: 0.01em; }
+h5 { font-size: 0.9em; margin-top: 0.7rem; margin-bottom: 0.3rem; }
+h6 { font-size: 0.85em; margin-top: 0.7rem; margin-bottom: 0.3rem; }
 
 p {
     margin-bottom: 0.6rem;
     text-align: justify;
-    line-height: 1.6;
+    line-height: 1.7;
     letter-spacing: 0.01em;
 }
 
@@ -56,7 +59,7 @@ ul, ol {
 
 li {
     margin-bottom: 0.3rem;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 code {
@@ -93,7 +96,7 @@ table {
 
 th, td {
     border: 1px solid #bbb;
-    padding: 0.55em 0.85em;
+    padding: 0.6em 0.9em;
     text-align: center;
     vertical-align: middle;
 }
@@ -112,15 +115,24 @@ tr:hover td {
     background-color: #f0f0f0;
 }
 
-/* 复选框文本优化 — 行高和字间距 */
+/* 复选框文本优化 — 行高和字间距（针对 □严重 □明显 等问卷选项） */
 input[type="checkbox"] {
     margin-right: 0.35em;
     vertical-align: middle;
 }
 
-/* 针对包含特殊符号（如 □）的文本行优化 */
-p, td, li {
-    letter-spacing: 0.01em;
+/* 问卷文本行优化：针对 □严重 □明显 等选项 */
+p, li, td {
+    letter-spacing: 0.02em;
+    line-height: 1.8;
+}
+
+/* 包含 input checkbox 的行进一步增大行高 */
+p:has(> input[type="checkbox"]),
+li:has(> input[type="checkbox"]) {
+    line-height: 2.2;
+    letter-spacing: 0.04em;
+    word-spacing: 0.05em;
 }
 
 blockquote {
@@ -131,7 +143,24 @@ blockquote {
     margin-bottom: 1rem;
 }
 
+/* 图片渲染优化 */
 img {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 图片容器（iframe 中可能出现） */
+figure {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+figcaption {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 0.5rem;
 }

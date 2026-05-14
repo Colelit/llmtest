@@ -98,8 +98,9 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
       },
     }));
 
-    // 后台保存到数据库
+    // 后台保存到数据库（静默附加 bucket_index 用于后台分析）
     if (userInfo) {
+      const bucketIndex = getBucketIndex();
       const { error } = await supabase
         .from('user_progress')
         .upsert({
@@ -107,6 +108,7 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
           question_id: questionId,
           model_id: modelId,
           evaluation_data: data,
+          bucket_index: bucketIndex,
           updated_at: new Date().toISOString(),
         });
 
@@ -158,6 +160,15 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
       : `您还有未完成评分的项目：${listed}。`;
   };
 
+  const getBucketIndex = (): number | null => {
+    const stored = localStorage.getItem('fineval_bucket_index');
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return null;
+  };
+
   const handleEarlySubmit = async () => {
     if (!userInfo) {
       setSubmitMessage("无法获取用户信息，请刷新重试。");
@@ -166,16 +177,36 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
     setIsSubmitting(true);
     setSubmitMessage("正在保存您的评测进度，请稍候...");
 
-    const submissionData = {
-      user_name: userInfo.name,
-      user_profile: userInfo.profile,
-      evaluation_data: evaluations,
-      duration_seconds: Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000),
-      status: 'in-progress', // 新增状态字段
+    const bucketIndex = getBucketIndex();
+
+    const durationSeconds = Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000);
+
+    // 隐式数据上报：user_id, bucket_index, duration, evaluation_data
+    const submissionData: any = {
+      user_name: userInfo.name,           // user_id
+      user_profile: userInfo.profile,      // 用户画像
+      evaluation_data: evaluations,        // 完整打分详情
+      duration_seconds: durationSeconds,   // 答题耗时（秒）
+      status: 'in-progress',
     };
 
-    // 使用 upsert 来更新或插入提交
+    if (bucketIndex !== null) {
+      submissionData.bucket_index = bucketIndex;  // 题包分配索引
+    }
+
+    // 使用 upsert 来更新或插入提交（兼容旧表结构）
     const { error } = await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name' });
+    if (error && error.message && error.message.includes('bucket_index')) {
+      // 如果是因为 bucket_index 列不存在导致失败，去掉该字段重试
+      const { bucket_index: _, ...fallbackData } = submissionData;
+      const { error: retryError } = await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name' });
+      if (!retryError) {
+        setSubmitMessage('您的进度已成功保存！');
+        setTimeout(() => setSubmitMessage(''), 5000);
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     setIsSubmitting(false);
     if (error) {
@@ -202,16 +233,31 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
     setIsSubmitting(true);
     setSubmitMessage("正在提交所有评价，请稍候...");
 
-    const submissionData = {
-      user_name: userInfo.name,
-      user_profile: userInfo.profile,
-      evaluation_data: evaluations,
-      duration_seconds: Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000),
-      status: 'completed', // 状态为完成
+    const bucketIndex = getBucketIndex();
+    const durationSeconds = Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000);
+
+    // 隐式数据上报：user_id, bucket_index, duration, evaluation_data
+    const submissionData: any = {
+      user_name: userInfo.name,           // user_id
+      user_profile: userInfo.profile,      // 用户画像
+      evaluation_data: evaluations,        // 完整打分详情
+      duration_seconds: durationSeconds,   // 答题耗时（秒）
+      status: 'completed',
     };
 
-    // 最终提交也用 upsert，以防用户直接点这个
-    const { error } = await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name' });
+    if (bucketIndex !== null) {
+      submissionData.bucket_index = bucketIndex;  // 题包分配索引
+    }
+
+    // 最终提交也用 upsert，以防用户直接点这个（兼容旧表结构）
+    let error = null;
+    const upsertResult = await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name' });
+    error = upsertResult.error;
+    if (error && error.message && error.message.includes('bucket_index')) {
+      const { bucket_index: _, ...fallbackData } = submissionData;
+      const retry = await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name' });
+      error = retry.error;
+    }
 
     if (error) {
       setIsSubmitting(false);
@@ -220,6 +266,7 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
       // 提交成功后，清理该用户的进度
       await supabase.from('user_progress').delete().eq('user_id', userInfo.name);
       localStorage.removeItem('fineval_user_info');
+      localStorage.removeItem('fineval_bucket_index');
       
       const params = new URLSearchParams();
       params.set('name', userInfo.name);

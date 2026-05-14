@@ -9,10 +9,8 @@ import { ModelAnswer, Question } from './types';
 const answersDir = path.join(process.cwd(), '_answers');
 const baseUrl = process.env.BASE_URL || '';
 
-// 将 BASE_URL 替换为更通用的 BASE_PATH，并兼容老的 BASE_URL
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || process.env.BASE_URL || '';
 
-// Function to create a full HTML document string
 const createHtmlDoc = (mainContent: string): string => {
   return `
     <!DOCTYPE html>
@@ -45,19 +43,16 @@ export async function getAllQuestions(): Promise<Question[]> {
       const answerFiles = fs.readdirSync(questionDir)
         .filter(file => file.endsWith('.md'))
         .sort();
-      
+
       const answers: ModelAnswer[] = await Promise.all(
         answerFiles.map(async (fileName) => {
           const fullPath = path.join(questionDir, fileName);
           const fileContents = fs.readFileSync(fullPath, 'utf8');
           const matterResult = matter(fileContents);
 
-          // First, convert Obsidian-style image references ![[filename.png]] to standard markdown
           let markdownContent = matterResult.content;
-          
-          // Convert ![[filename.png]] to ![](images/filename.png)
           markdownContent = markdownContent.replace(/!\[\[([^\]]+\.(png|jpg|jpeg|gif|svg|webp))\]\]/gi, '![](images/$1)');
-          
+
           const processedContent = await remark()
             .use(remarkGfm)
             .use(html)
@@ -65,10 +60,9 @@ export async function getAllQuestions(): Promise<Question[]> {
 
           let contentHtmlBody = processedContent.toString();
 
-          // 将图片路径前缀统一替换为含 basePath 的 Public 目录
           const publicImagePath = `${basePath}/vendor/question-${questionId}/images/`;
           contentHtmlBody = contentHtmlBody.replace(
-            /src="(?:\/|\.{2}\/|\.\/)?images\//gi,
+            /src="(?:\/|\.{2}\/|\.)?images\//gi,
             `src="${publicImagePath}`
           );
 
@@ -91,19 +85,17 @@ export async function getAllQuestions(): Promise<Question[]> {
   return allQuestionsData;
 }
 
-// Centralized bucket matrix: 10 packs, each with 9 dynamic question IDs.
-// 30 dynamic questions (IDs 2-58, first 30 after sorting) each appear exactly 3 times.
 export const BUCKET_MATRIX = [
-  ['2', '3', '4', '18', '20', '21', '39', '40', '43'],
-  ['5', '7', '8', '24', '25', '26', '46', '48', '50'],
-  ['13', '14', '16', '27', '29', '31', '53', '55', '57'],
-  ['17', '18', '20', '34', '39', '40', '58', '2', '3'],
-  ['4', '5', '7', '21', '24', '25', '43', '46', '48'],
-  ['8', '13', '14', '26', '27', '29', '50', '53', '55'],
-  ['16', '17', '18', '31', '34', '39', '57', '58', '2'],
-  ['3', '4', '5', '20', '21', '24', '40', '43', '46'],
-  ['7', '8', '13', '25', '26', '27', '48', '50', '53'],
-  ['14', '16', '17', '29', '31', '34', '55', '57', '58'],
+  ['83', '46', '27', '67', '85', '59', '87', '18', '96', '50', '57', '21', '90', '94', '76', '13', '25', '86'],
+  ['83', '46', '39', '67', '85', '81', '87', '18', '48', '50', '57', '74', '90', '94', '8', '13', '25', '3'],
+  ['83', '91', '39', '67', '65', '81', '87', '78', '48', '50', '77', '74', '90', '4', '8', '13', '26', '3'],
+  ['46', '91', '39', '34', '65', '81', '7', '78', '48', '89', '77', '74', '24', '4', '8', '93', '26', '3'],
+  ['91', '92', '34', '65', '5', '7', '78', '2', '89', '77', '80', '24', '4', '70', '93', '26', '14'],
+  ['20', '92', '34', '75', '5', '7', '43', '2', '89', '53', '80', '24', '55', '70', '93', '29', '14'],
+  ['20', '92', '17', '75', '5', '58', '43', '2', '31', '53', '80', '84', '55', '70', '16', '29', '14'],
+  ['20', '95', '17', '75', '40', '58', '43', '88', '31', '53', '66', '84', '55', '82', '16', '29', '79'],
+  ['27', '95', '17', '59', '40', '58', '96', '88', '31', '21', '66', '84', '76', '82', '16', '86', '79'],
+  ['27', '95', '85', '59', '40', '18', '96', '88', '57', '21', '66', '94', '76', '82', '25', '86', '79'],
 ];
 
 export function getQuestionsForBucket(bucketIndex: number, allQuestions: Question[]): Question[] {

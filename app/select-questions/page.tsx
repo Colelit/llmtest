@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function SelectQuestionsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [userInfo, setUserInfo] = useState<{ name: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ name: string; profile: object; startTime: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -24,43 +24,72 @@ export default function SelectQuestionsPage() {
     setIsLoading(true);
 
     try {
-      // 查询 submissions 表获取所有已提交用户（按创建时间排序）
-      const { data: submissions, error } = await supabase
-        .from('submissions')
-        .select('user_name, created_at')
-        .order('created_at', { ascending: true });
+      // 1. 优先检查 localStorage 中是否已有绑定的 bucket_index
+      const storedBucket = localStorage.getItem('fineval_bucket_index');
+      if (storedBucket !== null) {
+        const bucketIndex = parseInt(storedBucket, 10);
+        if (!isNaN(bucketIndex)) {
+          router.push(`/evaluate?bucket=${bucketIndex}`);
+          return;
+        }
+      }
 
-      if (error) {
-        console.error('查询 submissions 失败:', error);
+      // 2. 查询 Supabase 中是否已有该用户的 bucket 分配记录
+      // （兼容没有 bucket_index 列的旧表，出错则降级到本地逻辑）
+      let existingSubmission = null;
+      try {
+        const { data, error } = await supabase
+          .from('submissions')
+          .select('user_name, bucket_index')
+          .eq('user_name', userInfo.name)
+          .maybeSingle();
+        if (!error) existingSubmission = data;
+      } catch (e) {
+        console.warn('查询 bucket_index 失败（可能列不存在）:', e);
+      }
+
+      if (existingSubmission && existingSubmission.bucket_index !== null && existingSubmission.bucket_index !== undefined) {
+        // 已存在分配记录，直接使用
+        const bucketIndex = existingSubmission.bucket_index;
+        localStorage.setItem('fineval_bucket_index', String(bucketIndex));
+        router.push(`/evaluate?bucket=${bucketIndex}`);
+        return;
+      }
+
+      // 3. 新用户：查询当前系统内已分配的用户总数
+      const { count: assignedCount, error: countError } = await supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('查询用户总数失败:', countError);
         fallbackAllocation(userInfo.name);
         return;
       }
 
-      // 去重并按首次出现时间排序
-      const seen = new Set<string>();
-      const uniqueUsers: string[] = [];
-      for (const row of submissions || []) {
-        if (row.user_name && !seen.has(row.user_name)) {
-          seen.add(row.user_name);
-          uniqueUsers.push(row.user_name);
-        }
-      }
+      const count = assignedCount ?? 0;
+      const bucketIndex = count % 10;
 
-      const existingIndex = uniqueUsers.indexOf(userInfo.name);
-      let bucketIndex: number;
-
-      if (existingIndex >= 0) {
-        // 已分配过：用原位置
-        bucketIndex = existingIndex % 10;
-      } else {
-        // 新用户：按全局 count 分配
-        bucketIndex = uniqueUsers.length % 10;
-      }
-
-      // 持久化到 localStorage
+      // 4. 持久化到 localStorage
       localStorage.setItem('fineval_bucket_index', String(bucketIndex));
 
-      // 跳转到 evaluate 页面
+      // 5. 尝试持久化到 Supabase（兼容旧表结构）
+      try {
+        await supabase
+          .from('submissions')
+          .upsert({
+            user_name: userInfo.name,
+            user_profile: userInfo.profile,
+            bucket_index: bucketIndex,
+            status: 'assigned',
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'user_name' });
+      } catch (e) {
+        console.warn('保存 bucket_index 到 Supabase 失败（可能列不存在）:', e);
+        // 不影响继续答题，localStorage 已保存
+      }
+
+      // 6. 跳转到 evaluate 页面
       router.push(`/evaluate?bucket=${bucketIndex}`);
     } catch (err) {
       console.error('分配题包出错:', err);
@@ -87,6 +116,9 @@ export default function SelectQuestionsPage() {
     );
   }
 
+  // 获取该用户对应的题包题目数量（用于展示）
+  const bucketSize = 18; // BUCKET_MATRIX 中题包大小为 17 或 18，取近似值展示
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200 max-w-md w-full text-center">
@@ -101,7 +133,7 @@ export default function SelectQuestionsPage() {
         <div className="bg-blue-50 rounded-lg p-4 mb-6 text-left">
           <h2 className="font-semibold text-blue-900 mb-2 text-center">评测说明</h2>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• 本次评测共 <strong>10 道题</strong>（1 道固定题 + 9 道分配题）</li>
+            <li>• 本次评测共 <strong>{bucketSize} 道题</strong>（1 道固定题 + {bucketSize - 1} 道分配题）</li>
             <li>• 每道题包含 8 个匿名 RIA 的回答</li>
             <li>• 系统已根据您的信息自动分配题目</li>
             <li>• 预计用时约 15-20 分钟</li>
