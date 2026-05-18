@@ -417,9 +417,10 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
             {/* 左侧：分页控制 */}
             <div className="flex items-center space-x-2">
               {(() => {
-                const totalPages = layoutMode === '1x8' ? 8 : 4;
+                const modelsPerPage = layoutMode === '1x8' ? 1 : 2;
+                const totalPages = Math.max(1, Math.ceil(currentQuestion.answers.length / modelsPerPage));
                 const pageUnit = layoutMode === '1x8' ? '模型' : '组';
-                
+
                 return (
                   <>
                     <button
