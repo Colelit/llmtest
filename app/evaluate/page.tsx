@@ -1,4 +1,5 @@
-import { getAllQuestions, getQuestionsForBucket } from '@/lib/questions';
+import { getQuestionsForBucket } from '@/lib/questions';
+import { loadQuestions } from '@/lib/content/loader';
 import EvaluationClient from '@/app/components/EvaluationClient';
 import { seededShuffle } from '@/lib/utils';
 import { Question } from '@/lib/types';
@@ -8,8 +9,9 @@ interface PageProps {
 }
 
 export default async function EvaluatePage({ searchParams }: PageProps) {
-  const allQuestions = await getAllQuestions();
   const resolvedSearchParams = await searchParams;
+  const version = (resolvedSearchParams.version as 'v1' | 'v2') || 'v1';
+  const allQuestions = await loadQuestions(version);
 
   if (!allQuestions || allQuestions.length === 0) {
     return (
@@ -55,5 +57,5 @@ export default async function EvaluatePage({ searchParams }: PageProps) {
     questionsToDisplay = allQuestions;
   }
 
-  return <EvaluationClient allQuestions={questionsToDisplay} />;
+  return <EvaluationClient allQuestions={questionsToDisplay} version={version} />;
 }

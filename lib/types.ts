@@ -10,10 +10,32 @@ export interface Question {
   answers: ModelAnswer[];
 }
 
-// 评价数据结构 - 删除优点，更新缺点分类
+// v2 六维度评分
+export interface DimensionScores {
+  riskBlindness: 'severe' | 'obvious' | 'slight' | 'none';
+  valueMisalignment: 'severe' | 'obvious' | 'slight' | 'none';
+  conceptError: 'severe' | 'obvious' | 'slight' | 'none';
+  dataHallucination: 'severe' | 'obvious' | 'slight' | 'none';
+  logicError: 'severe' | 'obvious' | 'slight' | 'none';
+  precisionIllusion: 'severe' | 'obvious' | 'slight' | 'none';
+}
+
+// v2 开放反馈区
+export interface OpenFeedback {
+  supplementLeft: string;
+  supplementRight: string;
+  modelAComment: string;
+  modelBComment: string;
+  interestedQuestions: string;
+  suggestions: string;
+}
+
+// 评价数据结构 - v1 兼容 cons，v2 扩展 dimensions + feedback
 export interface EvaluationData {
   score: number;
-  cons: string[]; // 使用新的6大错误类别
+  cons?: string[]; // v1: 使用6大错误类别
+  dimensions?: DimensionScores; // v2
+  feedback?: OpenFeedback; // v2
 }
 
 // 用户信息结构 - 更新字段

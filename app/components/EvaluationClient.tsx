@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Question, EvaluationData, LayoutMode } from '@/lib/types';
+import type { Question, EvaluationData, LayoutMode, OpenFeedback } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import EvaluationCard from './EvaluationCard';
 import SidebarToggle from './SidebarToggle';
+import OpenFeedbackForm from './v2/OpenFeedbackForm';
 
 interface EvaluationState {
   [questionId: string]: {
@@ -13,7 +14,25 @@ interface EvaluationState {
   };
 }
 
-export default function EvaluationClient({ allQuestions }: { allQuestions: Question[] }) {
+const DEFAULT_DIMENSIONS = {
+  riskBlindness: 'none' as const,
+  valueMisalignment: 'none' as const,
+  conceptError: 'none' as const,
+  dataHallucination: 'none' as const,
+  logicError: 'none' as const,
+  precisionIllusion: 'none' as const,
+};
+
+const DEFAULT_FEEDBACK: OpenFeedback = {
+  supplementLeft: '',
+  supplementRight: '',
+  modelAComment: '',
+  modelBComment: '',
+  interestedQuestions: '',
+  suggestions: '',
+};
+
+export default function EvaluationClient({ allQuestions, version = 'v1' }: { allQuestions: Question[]; version?: 'v1' | 'v2' }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -23,6 +42,7 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
   const [evaluations, setEvaluations] = useState<EvaluationState>({});
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('2x4'); // 默认为 2x4
   const [isCollapsed, setIsCollapsed] = useState(false); // 侧边栏折叠状态
+  const [openFeedback, setOpenFeedback] = useState<OpenFeedback>(DEFAULT_FEEDBACK); // v2 全局反馈
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -52,7 +72,11 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
       allQuestions.forEach(q => {
         initialEvals[q.id] = {};
         q.answers.forEach(a => {
-          initialEvals[q.id][a.modelId] = { score: 0, cons: [] };
+          const base: EvaluationData = { score: 0, cons: [] };
+          if (version === 'v2') {
+            base.dimensions = { ...DEFAULT_DIMENSIONS };
+          }
+          initialEvals[q.id][a.modelId] = base;
         });
       });
 
@@ -136,10 +160,20 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
   };
 
   const isEvaluationComplete = () => {
-    return Object.values(evaluations).every(questionEvals =>
+    const allScored = Object.values(evaluations).every(questionEvals =>
       Object.values(questionEvals).every(modelEval => modelEval.score > 0)
     );
-  }
+    if (!allScored) return false;
+    // v2 还需检查 dimensions 是否全部填写
+    if (version === 'v2') {
+      return Object.values(evaluations).every(questionEvals =>
+        Object.values(questionEvals).every(modelEval =>
+          modelEval.dimensions && Object.values(modelEval.dimensions).every(v => v !== 'none')
+        )
+      );
+    }
+    return true;
+  };
   // 新增：生成未完成评分的详细提示
   const getIncompleteMessage = () => {
     const items: string[] = [];
@@ -182,10 +216,14 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
     const durationSeconds = Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000);
 
     // 隐式数据上报：user_id, bucket_index, duration, evaluation_data
+    const evalPayload: any = { ...evaluations };
+    if (version === 'v2') {
+      evalPayload.__openFeedback = openFeedback;
+    }
     const submissionData: any = {
       user_name: userInfo.name,           // user_id
       user_profile: userInfo.profile,      // 用户画像
-      evaluation_data: evaluations,        // 完整打分详情
+      evaluation_data: evalPayload,        // 完整打分详情
       duration_seconds: durationSeconds,   // 答题耗时（秒）
       status: 'in-progress',
     };
@@ -237,10 +275,14 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
     const durationSeconds = Math.floor((new Date().getTime() - new Date(userInfo.startTime).getTime()) / 1000);
 
     // 隐式数据上报：user_id, bucket_index, duration, evaluation_data
+    const evalPayload: any = { ...evaluations };
+    if (version === 'v2') {
+      evalPayload.__openFeedback = openFeedback;
+    }
     const submissionData: any = {
       user_name: userInfo.name,           // user_id
       user_profile: userInfo.profile,      // 用户画像
-      evaluation_data: evaluations,        // 完整打分详情
+      evaluation_data: evalPayload,        // 完整打分详情
       duration_seconds: durationSeconds,   // 答题耗时（秒）
       status: 'completed',
     };
@@ -362,6 +404,7 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
                 answer={answer}
                 evaluation={evaluations[currentQuestion.id]?.[answer.modelId]}
                 onUpdate={handleUpdateEvaluation}
+                version={version}
               />
             ))}
           </div>
@@ -475,6 +518,13 @@ export default function EvaluationClient({ allQuestions }: { allQuestions: Quest
             </div>
           )}
         </div>
+
+        {/* v2 开放反馈区 */}
+        {version === 'v2' && (
+          <div className="mt-4">
+            <OpenFeedbackForm value={openFeedback} onChange={setOpenFeedback} />
+          </div>
+        )}
       </main>
     </div>
   );
