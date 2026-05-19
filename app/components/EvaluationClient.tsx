@@ -136,7 +136,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
           bucket_index: bucketIndex,
           version: version,
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'user_id,question_id,model_id,version' });
 
       if (error) {
         console.error('保存进度失败:', error);
