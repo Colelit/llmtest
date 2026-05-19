@@ -4,11 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+function getUrlParam(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get(key);
+}
+
 export default function SelectQuestionsPage() {
   const router = useRouter();
   const supabase = createClient();
   const [userInfo, setUserInfo] = useState<{ name: string; profile: object; startTime: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [version, setVersion] = useState<'v1' | 'v2'>('v1');
 
   useEffect(() => {
     const storedUserInfo = localStorage.getItem('fineval_user_info');
@@ -17,6 +24,18 @@ export default function SelectQuestionsPage() {
       return;
     }
     setUserInfo(JSON.parse(storedUserInfo));
+
+    // 获取版本参数：优先从 URL query 读取，其次从 localStorage 读取
+    const urlVersion = getUrlParam('version');
+    if (urlVersion === 'v1' || urlVersion === 'v2') {
+      setVersion(urlVersion);
+      localStorage.setItem('fineval_selected_version', urlVersion);
+    } else {
+      const storedVersion = localStorage.getItem('fineval_selected_version');
+      if (storedVersion === 'v1' || storedVersion === 'v2') {
+        setVersion(storedVersion);
+      }
+    }
   }, [router]);
 
   const handleStart = async () => {
@@ -29,19 +48,20 @@ export default function SelectQuestionsPage() {
       if (storedBucket !== null) {
         const bucketIndex = parseInt(storedBucket, 10);
         if (!isNaN(bucketIndex)) {
-          router.push(`/evaluate?bucket=${bucketIndex}`);
+          router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
           return;
         }
       }
 
-      // 2. 查询 Supabase 中是否已有该用户的 bucket 分配记录
-      // （兼容没有 bucket_index 列的旧表，出错则降级到本地逻辑）
+      // 2. 查询 Supabase 中是否已有该用户当前版本的 bucket 分配记录
+      // （兼容没有 bucket_index/version 列的旧表，出错则降级到本地逻辑）
       let existingSubmission = null;
       try {
         const { data, error } = await supabase
           .from('submissions')
           .select('user_name, bucket_index')
           .eq('user_name', userInfo.name)
+          .eq('version', version)
           .maybeSingle();
         if (!error) existingSubmission = data;
       } catch (e) {
@@ -52,7 +72,7 @@ export default function SelectQuestionsPage() {
         // 已存在分配记录，直接使用
         const bucketIndex = existingSubmission.bucket_index;
         localStorage.setItem('fineval_bucket_index', String(bucketIndex));
-        router.push(`/evaluate?bucket=${bucketIndex}`);
+        router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
         return;
       }
 
@@ -82,6 +102,7 @@ export default function SelectQuestionsPage() {
             user_profile: userInfo.profile,
             bucket_index: bucketIndex,
             status: 'assigned',
+            version: version,
             created_at: new Date().toISOString(),
           }, { onConflict: 'user_name' });
       } catch (e) {
@@ -89,8 +110,8 @@ export default function SelectQuestionsPage() {
         // 不影响继续答题，localStorage 已保存
       }
 
-      // 6. 跳转到 evaluate 页面
-      router.push(`/evaluate?bucket=${bucketIndex}`);
+      // 6. 跳转到 evaluate 页面（带上 version 参数）
+      router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
     } catch (err) {
       console.error('分配题包出错:', err);
       fallbackAllocation(userInfo.name);
@@ -105,7 +126,7 @@ export default function SelectQuestionsPage() {
     }
     const bucketIndex = Math.abs(hash) % 10;
     localStorage.setItem('fineval_bucket_index', String(bucketIndex));
-    router.push(`/evaluate?bucket=${bucketIndex}`);
+    router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
   };
 
   if (!userInfo) {

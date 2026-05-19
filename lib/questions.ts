@@ -23,6 +23,10 @@ export const BUCKET_MATRIX = [
 ];
 
 export function getQuestionsForBucket(bucketIndex: number, allQuestions: Question[]): Question[] {
+  // v2 题包使用 q1/q2 格式 ID，不使用 BUCKET_MATRIX，直接返回全部题目
+  if (allQuestions.length > 0 && allQuestions[0].id.startsWith('q')) {
+    return allQuestions;
+  }
   const pack = BUCKET_MATRIX[bucketIndex % BUCKET_MATRIX.length];
   const questionIds = ['1', ...pack];
   const questionMap = new Map(allQuestions.map(q => [q.id, q]));

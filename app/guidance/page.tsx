@@ -20,7 +20,7 @@ export default function GuidancePage() {
   }, [router]);
 
   const handleContinueToEvaluation = () => {
-    router.push('/select-questions');
+    router.push('/select-version');
   };
 
   if (!userInfo) {

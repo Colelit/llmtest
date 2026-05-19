@@ -80,11 +80,12 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
         });
       });
 
-      // 3. 加载用户历史进度
+      // 3. 加载用户历史进度（按版本隔离）
       const { data: progress, error } = await supabase
         .from('user_progress')
         .select('question_id, model_id, evaluation_data')
-        .eq('user_id', parsedUserInfo.name);
+        .eq('user_id', parsedUserInfo.name)
+        .eq('version', version);
 
       if (error) {
         console.error('获取进度失败:', error);
@@ -122,7 +123,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       },
     }));
 
-    // 后台保存到数据库（静默附加 bucket_index 用于后台分析）
+    // 后台保存到数据库（静默附加 bucket_index 和 version 用于后台分析）
     if (userInfo) {
       const bucketIndex = getBucketIndex();
       const { error } = await supabase
@@ -133,6 +134,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
           model_id: modelId,
           evaluation_data: data,
           bucket_index: bucketIndex,
+          version: version,
           updated_at: new Date().toISOString(),
         });
 
@@ -182,7 +184,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
         .filter(a => !evaluations[q.id] || !evaluations[q.id][a.modelId] || evaluations[q.id][a.modelId].score <= 0)
         .map(a => a.modelDisplayName);
       if (missing.length > 0) {
-        items.push(`问题 ${q.id}（未评分：${missing.join('、')}）`);
+        items.push(`问题 ${q.id.toUpperCase()}（未评分：${missing.join('、')}）`);
       }
     });
     if (items.length === 0) return '';
@@ -226,6 +228,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       evaluation_data: evalPayload,        // 完整打分详情
       duration_seconds: durationSeconds,   // 答题耗时（秒）
       status: 'in-progress',
+      version: version,                    // 题包版本（v1/v2）
     };
 
     if (bucketIndex !== null) {
@@ -285,6 +288,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       evaluation_data: evalPayload,        // 完整打分详情
       duration_seconds: durationSeconds,   // 答题耗时（秒）
       status: 'completed',
+      version: version,                    // 题包版本（v1/v2）
     };
 
     if (bucketIndex !== null) {
@@ -305,10 +309,11 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       setIsSubmitting(false);
       setSubmitMessage(`提交失败: ${error.message}`);
     } else {
-      // 提交成功后，清理该用户的进度
-      await supabase.from('user_progress').delete().eq('user_id', userInfo.name);
+      // 提交成功后，清理该用户当前版本的进度
+      await supabase.from('user_progress').delete().eq('user_id', userInfo.name).eq('version', version);
       localStorage.removeItem('fineval_user_info');
       localStorage.removeItem('fineval_bucket_index');
+      localStorage.removeItem('fineval_selected_version');
       
       const params = new URLSearchParams();
       params.set('name', userInfo.name);
@@ -375,7 +380,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
                     index === currentQuestionIndex ? 'bg-blue-100 text-blue-700 font-bold' : 'hover:bg-gray-100'
                   }`}
                 >
-                  问题 {q.id}
+                  问题 {q.id.toUpperCase()}
                 </button>
               ))}
             </nav>
@@ -385,12 +390,25 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
 
       {/* Main Content */}
       <main className="flex-1 p-2 md:p-4 lg:p-6 flex flex-col">
+        {/* 题包标识横幅 */}
+        <div className="flex-shrink-0 mb-2">
+          <div className={`py-1.5 px-3 rounded-lg shadow-sm border text-center ${
+            version === 'v2'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-blue-50 border-blue-200 text-blue-800'
+          }`}>
+            <span className="text-sm font-semibold">
+              当前测评：{version === 'v2' ? '新题包（v2）' : '旧题包（v1）'}
+            </span>
+          </div>
+        </div>
+
         {/* 问题卡片区域 - 响应式高度分配 */}
         <div className="question-card-mobile question-card-desktop flex flex-col flex-1">
           <div className="flex-shrink-0 mb-1">
             <div className="py-2 px-3 bg-white rounded-lg shadow-md border border-gray-200">
               <h1 className="text-lg md:text-xl font-bold text-gray-800">
-                问题 {currentQuestion.id}/{allQuestions.length}:
+                问题 {currentQuestion.id.toUpperCase()}/{allQuestions.length}:
               </h1>
               <p className="mt-1 text-sm md:text-base text-gray-600">{currentQuestion.text}</p>
             </div>

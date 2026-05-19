@@ -31,6 +31,7 @@ modelDisplayName: 匿名模型G
 |   |   |   |
 |---|---|---|
 |对比维度|**中证A500指数**|**沪深300指数**|
+|---|---|---|
 |**核心差异**|**行业均衡的龙头集合**|**纯粹的市值龙头**|
 |**选股方法**|强调行业均衡，在各行业内选取龙头公司，覆盖面更广。[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHnKjAY9KJ0yyIUOuopEh8JDXfGyHPf0wVRnO6PJajQhi1GeptQiYoUuvA_AI3BFtGhhv2bSsLeYOiIH-V_mrE-t07M5exRxEllbUxDCyXpO7kjB8COot2dUaTdk_hvSzmU-7fU)][[6](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFUwCfKHDLe00aTh2pW_poKzA6xavok2GNfAXCFqTyqJFk03H39rLajjJdmZa-P4IZ8U9X_gBB_YkukOKs4OLUrkhyXmFvz7oDwDNmH3GIRI0Rn0lGPDPSYJTtg4wf8)]|主要按市值和流动性排名，选取前300名，未刻意进行行业平衡。[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHnKjAY9KJ0yyIUOuopEh8JDXfGyHPf0wVRnO6PJajQhi1GeptQiYoUuvA_AI3BFtGhhv2bSsLeYOiIH-V_mrE-t07M5exRxEllbUxDCyXpO7kjB8COot2dUaTdk_hvSzmU-7fU)]|
 |**行业分布**|行业分布更分散、均衡，降低了金融、食品饮料等传统行业的权重，提高了高端制造、医药等新兴行业占比。[[4](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHcjzOW-GTanzsVXLGFeqnoM7gDAz4p303wdXaY9O5M7yxqf820sBSOZeMZ2DzyzQl4Ma23hJFlveCg98UkRtjEd00WNqHQ40WVP4__h8Jw7oDSclN9tmAZy-p40QhcC6SAaS_m0E1DfAEzRs33yy4UWUcF6P6z3f8o95W_L2Wtq12VDkNXZHyikzJmDLhj2X2VePkB2hknPd0I_MeoaSTq0OrKDw%3D%3D)][[7](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGgRcWNbpJ_l5AYSmqrNcqhNG8TsCdfonqfy03IOfuIhwyLNW2tJaKnjfLf8e1J9DM8m3wHmFgnxc_JiNw_bNXKYwZ2ekhi9mJCQdlR9zQLNoz1r-WR86lyqaksQKXok1VsHFwKPGRlz05oD6ukTfQ%3D)]|金融、消费等传统大市值行业占比较高。|
@@ -45,6 +46,7 @@ modelDisplayName: 匿名模型G
 |   |   |   |
 |---|---|---|
 |对比维度|**中证A500指数**|**中证500指数**|
+|---|---|---|
 |**核心差异**|**大盘核心龙头**|**中盘股代表**|
 |**市值覆盖**|主要由大中盘股构成，成分股平均市值较高。[[5](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQE9o03rfvGecp9rNplvDYo2UrXc2Am19axnNrPWDcMOVWdVuZiwqLQu_vKtLPNCgWiYDmwTKbU8FKs4AJN79cN1N73FmVi7mk2LJUzyzU0Jyp_0uHLcvSBB2oIY8HLFd9z4eyEfbP8OJHuSoud3VSErA_8kiId2dX7pk5IqADKcfqIhGhgN9Wd6MMfy)]|完全由中盘股构成，几乎不包含500亿以上市值的公司。[[9](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQEi2yV6UBdrPuoeqUOCqcCxB2nUaDYbPt0V6FAUF_tP5GyckntRgHV2URbiuYUC3AyY-I9FKnhaMLC7gqNYzqBoQ_n6Tf2z-XDp7HC_m3JD8mIiCG_rLsGNI2qUOL0UCwaFA4e29lPN5uMPrpJFGw%3D%3D)]|
 |**选股范围**|在全市场各行业中选取龙头。|剔除市值最大的300家公司后进行选择。[[9](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQEi2yV6UBdrPuoeqUOCqcCxB2nUaDYbPt0V6FAUF_tP5GyckntRgHV2URbiuYUC3AyY-I9FKnhaMLC7gqNYzqBoQ_n6Tf2z-XDp7HC_m3JD8mIiCG_rLsGNI2qUOL0UCwaFA4e29lPN5uMPrpJFGw%3D%3D)]|
@@ -60,6 +62,7 @@ modelDisplayName: 匿名模型G
 |   |   |   |
 |---|---|---|
 |对比维度|**中证A500指数**|**上证50指数**|
+|---|---|---|
 |**核心差异**|**沪深两市、行业均衡**|**上交所、超大盘蓝筹**|
 |**市场范围**|覆盖上海和深圳两个交易所。|仅覆盖上海交易所。[[12](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQER9MgxgFS1ScTh1mlxMtjjTLmUMROuA-9FeZIfFfVCBHLYm9VVzAUC0MgDa2cDQvIBUTQwH7-xUh9Le0jzR1cpRpuYBBSMv3E_ESVzpPe-A_504cqVJCWha7lg5eF0SEUlh0aaFwC8rN8OMo56sA%3D%3D)]|
 |**成分股数量**|500只|50只|

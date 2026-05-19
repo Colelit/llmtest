@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS submissions (
     evaluation_data jsonb DEFAULT '{}',
     duration_seconds bigint,
     status text DEFAULT 'assigned' CHECK (status IN ('assigned', 'in-progress', 'completed')),
-    bucket_index bigint
+    bucket_index bigint,
+    version text DEFAULT 'v1' CHECK (version IN ('v1', 'v2'))
 );
 
 -- 2. 创建 user_progress 表（临时每题每模型进度）
@@ -25,15 +26,18 @@ CREATE TABLE IF NOT EXISTS user_progress (
     evaluation_data jsonb DEFAULT '{}',
     bucket_index bigint,
     updated_at timestamptz DEFAULT now(),
-    UNIQUE (user_id, question_id, model_id)
+    version text DEFAULT 'v1' CHECK (version IN ('v1', 'v2')),
+    UNIQUE (user_id, question_id, model_id, version)
 );
 
 -- 3. 创建索引（优化查询性能）
 CREATE INDEX IF NOT EXISTS idx_submissions_user_name ON submissions(user_name);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
 CREATE INDEX IF NOT EXISTS idx_submissions_bucket_index ON submissions(bucket_index);
+CREATE INDEX IF NOT EXISTS idx_submissions_version ON submissions(version);
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_progress_question_id ON user_progress(question_id);
+CREATE INDEX IF NOT EXISTS idx_user_progress_version ON user_progress(version);
 
 -- 4. 启用 RLS（Row Level Security）
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;

@@ -57,17 +57,22 @@ def get_client() -> Client:
     return create_client(url, key)
 
 
-def fetch_all_rows(client: Client, table: str, page_size: int = 1000) -> List[Dict[str, Any]]:
+def fetch_all_rows(client: Client, table: str, page_size: int = 1000, version: str | None = None) -> List[Dict[str, Any]]:
     """
     分页抓取指定表的全部数据。
     - 使用 range 对 postgrest 进行分页
     - 自动终止于最后一页
+    - 支持按 version 字段筛选
     """
     all_data: List[Dict[str, Any]] = []
     start = 0
 
+    query = client.table(table).select("*")
+    if version is not None:
+        query = query.eq("version", version)
+
     while True:
-        resp = client.table(table).select("*").range(start, start + page_size - 1).execute()
+        resp = query.range(start, start + page_size - 1).execute()
 
         if getattr(resp, "error", None):
             raise RuntimeError(f"Fetch error: {resp.error}")
@@ -128,11 +133,16 @@ def main():
         default=1000,
         help="Page size for pagination (default: 1000)"
     )
+    parser.add_argument(
+        "--version",
+        default=None,
+        help="Filter by version field, e.g. 'v1' or 'v2'"
+    )
 
     args = parser.parse_args()
 
     client = get_client()
-    rows = fetch_all_rows(client, args.table, page_size=args.page_size)
+    rows = fetch_all_rows(client, args.table, page_size=args.page_size, version=args.version)
 
     if args.normalize:
         normalize_row_json_fields(rows)
@@ -146,7 +156,8 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, indent=2 if args.pretty else None)
 
-    print(f"Exported {len(rows)} rows from '{args.table}' -> {out_path}")
+    filter_info = f" (version={args.version})" if args.version else ""
+    print(f"Exported {len(rows)} rows{filter_info} from '{args.table}' -> {out_path}")
 
 
 if __name__ == "__main__":

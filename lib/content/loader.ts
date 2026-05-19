@@ -8,8 +8,19 @@ import { ModelAnswer, Question } from '../types';
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || process.env.BASE_URL || '';
 
+// 读取 Markdown CSS 内容并缓存，用于内联到 iframe 中（避免 srcDoc 中外部链接路径解析问题）
+const getMarkdownCss = (): string => {
+  try {
+    const cssPath = path.join(process.cwd(), 'public', 'css', 'markdown.css');
+    return fs.readFileSync(cssPath, 'utf8');
+  } catch {
+    return '';
+  }
+};
+
 /**
  * 创建完整的 HTML 文档字符串，用于 iframe srcDoc
+ * CSS 直接内联，避免 srcDoc 中相对路径无法解析的问题
  * @param mainContent - HTML 内容主体
  */
 const createHtmlDoc = (mainContent: string): string => {
@@ -19,7 +30,7 @@ const createHtmlDoc = (mainContent: string): string => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="${basePath}/css/markdown.css">
+      <style>${getMarkdownCss()}</style>
     </head>
     <body>
       ${mainContent}
