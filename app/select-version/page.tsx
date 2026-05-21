@@ -34,7 +34,7 @@ export default function SelectVersionPage() {
   const handleSelect = (version: "v1" | "v2") => {
     // 将选择结果存入 localStorage，供后续页面读取
     localStorage.setItem("fineval_selected_version", version);
-    router.push(`/select-questions?version=${version}`);
+    router.push(`/guidance?version=${version}`);
   };
 
   if (!userInfo) {

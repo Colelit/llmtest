@@ -137,8 +137,12 @@ export default function SelectQuestionsPage() {
     );
   }
 
-  // 获取该用户对应的题包题目数量（用于展示）
-  const bucketSize = 18; // BUCKET_MATRIX 中题包大小为 17 或 18，取近似值展示
+  // 根据版本动态计算题目数量和模型数量
+  const isV2 = version === 'v2';
+  // v2 专用配置：18 道题、8 个模型、预计 120 分钟；v1 保持原有配置
+  const bucketSize = isV2 ? 18 : 18; // v1: BUCKET_MATRIX 中题包大小约 17-18；v2: 18 道题
+  const modelCount = isV2 ? 8 : 8;   // v1/v2 均为 8 个模型回答
+  const estimatedTime = isV2 ? '120' : '15-20';
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
@@ -147,25 +151,43 @@ export default function SelectQuestionsPage() {
           准备开始评测
         </h1>
 
+        {/* 题包版本标识 */}
+        <div className={`py-1.5 px-3 rounded-lg shadow-sm border text-center mb-4 ${
+          isV2
+            ? 'bg-green-50 border-green-200 text-green-800'
+            : 'bg-blue-50 border-blue-200 text-blue-800'
+        }`}>
+          <span className="text-sm font-semibold">
+            当前测评：{isV2 ? '新题包（v2）' : '旧题包（v1）'}
+          </span>
+        </div>
+
         <p className="text-gray-600 mb-2">
           您好，<span className="font-semibold text-blue-600">{userInfo.name}</span>！
         </p>
 
-        <div className="bg-blue-50 rounded-lg p-4 mb-6 text-left">
-          <h2 className="font-semibold text-blue-900 mb-2 text-center">评测说明</h2>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• 本次评测共 <strong>{bucketSize} 道题</strong>（1 道固定题 + {bucketSize - 1} 道分配题）</li>
-            <li>• 每道题包含 8 个匿名 RIA 的回答</li>
+        <div className={`rounded-lg p-4 mb-6 text-left ${isV2 ? 'bg-green-50 border border-green-200' : 'bg-blue-50'}`}>
+          <h2 className={`font-semibold mb-2 text-center ${isV2 ? 'text-green-900' : 'text-blue-900'}`}>评测说明</h2>
+          <ul className={`text-sm space-y-1 ${isV2 ? 'text-green-800' : 'text-blue-800'}`}>
+            <li>• 本次评测共 <strong>{bucketSize} 道题</strong>{!isV2 && `（1 道固定题 + ${bucketSize - 1} 道分配题）`}</li>
+            <li>• 每道题包含 {modelCount} 个匿名 RIA 的回答</li>
             <li>• 系统已根据您的信息自动分配题目</li>
-            <li>• 预计用时约 15-20 分钟</li>
+            <li>• 预计用时约 {estimatedTime} 分钟</li>
             <li>• 可随时保存进度并继续</li>
           </ul>
+          {isV2 && (
+            <div className="mt-3 p-2 bg-white rounded border border-green-200 text-xs text-green-700">
+              <strong>提示：</strong>本套题目包含六维度错误评估，请仔细阅读评分标准后再开始答题。
+            </div>
+          )}
         </div>
 
         <button
           onClick={handleStart}
           disabled={isLoading}
-          className="w-full py-4 px-8 bg-blue-600 text-white text-lg font-bold rounded-xl hover:bg-blue-700 transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+          className={`w-full py-4 px-8 text-white text-lg font-bold rounded-xl transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none ${
+            isV2 ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
           {isLoading ? '正在准备试题...' : '开始答题'}
         </button>

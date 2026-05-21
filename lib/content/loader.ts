@@ -5,8 +5,12 @@ import { remark } from 'remark';
 import html from 'remark-html';
 import remarkGfm from 'remark-gfm';
 import { ModelAnswer, Question } from '../types';
+import { getModelBySlug, isImageSource } from '../models/registry';
+import { adaptManualContent, validateImageReferences } from '../adapters/manual-adapter';
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || process.env.BASE_URL || '';
+// 静态资源路径前缀，仅使用 NEXT_PUBLIC_BASE_PATH（Next.js 子路径配置）
+// 不使用 BASE_URL（后端 API 地址），避免 iframe 中图片指向错误域名
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 // 读取 Markdown CSS 内容并缓存，用于内联到 iframe 中（避免 srcDoc 中外部链接路径解析问题）
 const getMarkdownCss = (): string => {
@@ -44,11 +48,13 @@ const createHtmlDoc = (mainContent: string): string => {
  * @param markdownContent - 原始 Markdown 字符串
  * @param questionId - 题目 ID，用于图片路径重写
  * @param version - 版本号（v1 或 v2），用于图片路径前缀
+ * @param modelSlug - 模型 slug，用于截图模型图片校验（可选）
  */
 const convertMarkdownToHtml = async (
   markdownContent: string,
   questionId: string,
-  version: 'v1' | 'v2'
+  version: 'v1' | 'v2',
+  modelSlug?: string
 ): Promise<string> => {
   // 将 Obsidian 风格 wikilink 转换为标准 Markdown 图片语法
   let processedMarkdown = markdownContent.replace(
@@ -65,11 +71,23 @@ const convertMarkdownToHtml = async (
   let contentHtmlBody = processedContent.toString();
 
   // 重写图片 src 为 public 目录下的绝对路径
+  // 匹配 src 中 images/、./images/、/images/、../images/ 等相对路径前缀
   const publicImagePath = `${basePath}/vendor/${version}/${questionId}/images/`;
   contentHtmlBody = contentHtmlBody.replace(
-    /src="(?:\/|\.{2}\/|\.)?images\//gi,
+    /src="(?:\.{0,2}\/)?images\//gi,
     `src="${publicImagePath}`
   );
+
+  // 截图模型额外校验：若存在非法图片路径则输出警告
+  if (modelSlug && isImageSource(modelSlug)) {
+    const invalidRefs = validateImageReferences(processedMarkdown);
+    if (invalidRefs.length > 0) {
+      console.warn(
+        `[截图模型] ${modelSlug} 在题目 ${questionId} 中发现非法图片引用：`,
+        invalidRefs
+      );
+    }
+  }
 
   return createHtmlDoc(contentHtmlBody);
 };
@@ -145,6 +163,7 @@ const loadV1Questions = async (): Promise<Question[]> => {
 /**
  * v2 题库加载器
  * 新结构：_answers/v2/{questionId}/question.md + {model-slug}.md
+ * 使用 registry 获取模型元数据，通过 adapter 处理不同来源的答案
  */
 const loadV2Questions = async (): Promise<Question[]> => {
   const answersDir = path.join(process.cwd(), '_answers', 'v2');
@@ -186,19 +205,29 @@ const loadV2Questions = async (): Promise<Question[]> => {
           const fileContents = fs.readFileSync(fullPath, 'utf8');
           const matterResult = matter(fileContents);
 
-          // v2 中 modelDisplayName 暂时使用匿名格式，后续 Wave 3 从 registry 动态读取
+          // 从文件名提取模型 slug
           const modelSlug = path.basename(fileName, '.md');
+
+          // 从 frontmatter 获取 modelId，fallback 为 slug
           const modelId = matterResult.data.modelId || modelSlug;
 
+          // 查询注册表获取模型展示名，优先使用 frontmatter 中的 modelDisplayName
+          const registryModel = getModelBySlug(modelSlug);
+          const modelDisplayName = matterResult.data.modelDisplayName || registryModel?.displayName || modelSlug;
+
+          // 通过适配器处理内容：截图模型保留图片引用、跳过清洗
+          const adapted = adaptManualContent(matterResult.content, modelSlug);
+
           const contentHtml = await convertMarkdownToHtml(
-            matterResult.content,
+            adapted.content,
             questionId,
-            'v2'
+            'v2',
+            modelSlug
           );
 
           return {
             modelId,
-            modelDisplayName: '', // Wave 3 中从 registry 填充并匿名化
+            modelDisplayName,
             contentHtml,
           };
         })

@@ -4,7 +4,7 @@ body {
     font-size: 16px;
     line-height: 1.6;
     color: #333;
-    padding: 1.5rem;
+    padding: 0.5rem 1.00rem;
     max-width: 900px;
     margin: 0 auto;
 }
@@ -94,6 +94,14 @@ table {
     border: 1.5px solid #999;
 }
 
+thead, tbody, tfoot {
+    border: 1px solid #bbb;
+}
+
+tr {
+    border: 1px solid #bbb;
+}
+
 th, td {
     border: 1px solid #bbb;
     padding: 0.6em 0.9em;
@@ -105,13 +113,14 @@ th {
     font-weight: 600;
     background-color: #e8e8e8;
     color: #222;
+    border: 1px solid #999;
 }
 
-tr:nth-child(even) td {
+tbody tr:nth-child(even) td {
     background-color: #f9f9f9;
 }
 
-tr:hover td {
+tbody tr:hover td {
     background-color: #f0f0f0;
 }
 
@@ -145,7 +154,8 @@ blockquote {
 
 /* 图片渲染优化 */
 img {
-    max-width: 100%;
+    width: 80%;
+    max-width: 80%;
     height: auto;
     display: block;
     margin: 1rem auto;

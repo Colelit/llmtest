@@ -27,7 +27,7 @@ export default function WelcomePage() {
       startTime: new Date().toISOString(),
     };
     localStorage.setItem('fineval_user_info', JSON.stringify(userInfo));
-    router.push('/guidance');
+    router.push('/select-version');
   };
 
   const handleStart = async () => {

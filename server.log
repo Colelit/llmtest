@@ -1,0 +1,98 @@
+
+> fineval@0.1.0 predev
+> npm run sync-images
+
+
+> fineval@0.1.0 sync-images
+> node scripts/sync-images.mjs
+
+=== 开始同步题库图片 ===
+
+[v1] Synced images for question-1 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-1\images
+[v1] No images folder for question-13, skipping.
+[v1] Synced images for question-14 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-14\images
+[v1] Synced images for question-16 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-16\images
+[v1] Synced images for question-17 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-17\images
+[v1] No images folder for question-18, skipping.
+[v1] Synced images for question-2 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-2\images
+[v1] Synced images for question-20 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-20\images
+[v1] No images folder for question-21, skipping.
+[v1] Synced images for question-24 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-24\images
+[v1] Synced images for question-25 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-25\images
+[v1] Synced images for question-26 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-26\images
+[v1] Synced images for question-27 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-27\images
+[v1] No images folder for question-29, skipping.
+[v1] Synced images for question-3 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-3\images
+[v1] No images folder for question-31, skipping.
+[v1] Synced images for question-34 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-34\images
+[v1] No images folder for question-39, skipping.
+[v1] No images folder for question-4, skipping.
+[v1] No images folder for question-40, skipping.
+[v1] Synced images for question-43 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-43\images
+[v1] No images folder for question-46, skipping.
+[v1] Synced images for question-48 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-48\images
+[v1] Synced images for question-5 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-5\images
+[v1] Synced images for question-50 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-50\images
+[v1] Synced images for question-53 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-53\images
+[v1] Synced images for question-55 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-55\images
+[v1] No images folder for question-57, skipping.
+[v1] Synced images for question-58 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-58\images
+[v1] Synced images for question-59 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-59\images
+[v1] Synced images for question-65 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-65\images
+[v1] Synced images for question-66 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-66\images
+[v1] No images folder for question-67, skipping.
+[v1] Synced images for question-7 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-7\images
+[v1] Synced images for question-70 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-70\images
+[v1] Synced images for question-74 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-74\images
+[v1] No images folder for question-75, skipping.
+[v1] Synced images for question-76 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-76\images
+[v1] Synced images for question-77 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-77\images
+[v1] Synced images for question-78 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-78\images
+[v1] No images folder for question-79, skipping.
+[v1] No images folder for question-8, skipping.
+[v1] No images folder for question-80, skipping.
+[v1] Synced images for question-81 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-81\images
+[v1] Synced images for question-82 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-82\images
+[v1] No images folder for question-83, skipping.
+[v1] No images folder for question-84, skipping.
+[v1] Synced images for question-85 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-85\images
+[v1] Synced images for question-86 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-86\images
+[v1] No images folder for question-87, skipping.
+[v1] Synced images for question-88 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-88\images
+[v1] No images folder for question-89, skipping.
+[v1] No images folder for question-90, skipping.
+[v1] Synced images for question-91 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-91\images
+[v1] No images folder for question-92, skipping.
+[v1] Synced images for question-93 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-93\images
+[v1] No images folder for question-94, skipping.
+[v1] Synced images for question-95 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-95\images
+[v1] Synced images for question-96 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v1\question-96\images
+
+[v2] Synced images for q1 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q1\images
+[v2] Synced images for q10 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q10\images
+[v2] Synced images for q2 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q2\images
+[v2] Synced images for q3 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q3\images
+[v2] Synced images for q4 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q4\images
+[v2] Synced images for q5 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q5\images
+[v2] Synced images for q6 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q6\images
+[v2] Synced images for q7 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q7\images
+[v2] Synced images for q8 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q8\images
+[v2] Synced images for q9 -> C:\Cole\嘉因数科\llmtest-main\public\vendor\v2\q9\images
+
+=== 同步完成 ===
+
+> fineval@0.1.0 dev
+> next dev -p 10005
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:10005
+- Network:       http://166.111.111.125:10005
+- Environments: .env.local
+✓ Ready in 349ms
+
+ GET / 200 in 315ms (next.js: 160ms, application-code: 155ms)
+ GET /evaluate?version=v2&bucket=0 200 in 372ms (next.js: 59ms, application-code: 313ms)
+ GET / 200 in 35ms (next.js: 3ms, application-code: 31ms)
+ GET /evaluate?version=v2&bucket=0 200 in 273ms (next.js: 2ms, application-code: 271ms)
+ GET /evaluate?version=v2&bucket=0 200 in 254ms (next.js: 5ms, application-code: 249ms)
+ GET /evaluate?version=v2&bucket=1 200 in 614ms (next.js: 6ms, application-code: 609ms)

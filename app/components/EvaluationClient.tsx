@@ -6,6 +6,7 @@ import type { Question, EvaluationData, LayoutMode, OpenFeedback } from '@/lib/t
 import { createClient } from '@/lib/supabase/client';
 import EvaluationCard from './EvaluationCard';
 import SidebarToggle from './SidebarToggle';
+import ScoringPanel from './ScoringPanel';
 import OpenFeedbackForm from './v2/OpenFeedbackForm';
 
 interface EvaluationState {
@@ -43,6 +44,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('2x4'); // 默认为 2x4
   const [isCollapsed, setIsCollapsed] = useState(false); // 侧边栏折叠状态
   const [openFeedback, setOpenFeedback] = useState<OpenFeedback>(DEFAULT_FEEDBACK); // v2 全局反馈
+  const [feedbackExpanded, setFeedbackExpanded] = useState(false); // 开放反馈区折叠状态
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
@@ -89,20 +91,42 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
 
       if (error) {
         console.error('获取进度失败:', error);
-      } else if (progress && progress.length > 0) {
+      }
+
+      if (progress && progress.length > 0) {
         progress.forEach(item => {
           if (initialEvals[item.question_id] && initialEvals[item.question_id][item.model_id]) {
             initialEvals[item.question_id][item.model_id] = item.evaluation_data;
             lastQuestionId = item.question_id;
           }
         });
+      }
 
-        // 恢复到上次作答的问题
-        if (lastQuestionId) {
-          const lastIndex = allQuestions.findIndex(q => q.id === lastQuestionId);
-          if (lastIndex !== -1) {
-            setCurrentQuestionIndex(lastIndex);
-          }
+      // 4. 如果 Supabase 无数据，尝试从 localStorage 恢复（降级方案）
+      if (!progress || progress.length === 0) {
+        const progressKey = `fineval-progress-${version}`;
+        try {
+          const localProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
+          Object.entries(localProgress).forEach(([qId, models]: [string, any]) => {
+            if (initialEvals[qId]) {
+              Object.entries(models).forEach(([mId, data]: [string, any]) => {
+                if (initialEvals[qId][mId]) {
+                  initialEvals[qId][mId] = data;
+                  lastQuestionId = qId;
+                }
+              });
+            }
+          });
+        } catch (e) {
+          console.warn('localStorage 恢复进度失败:', e);
+        }
+      }
+
+      // 恢复到上次作答的问题
+      if (lastQuestionId) {
+        const lastIndex = allQuestions.findIndex(q => q.id === lastQuestionId);
+        if (lastIndex !== -1) {
+          setCurrentQuestionIndex(lastIndex);
         }
       }
 
@@ -123,6 +147,19 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       },
     }));
 
+    // 同时备份到 localStorage（按版本隔离，作为离线降级方案）
+    if (userInfo) {
+      const progressKey = `fineval-progress-${version}`;
+      try {
+        const saved = JSON.parse(localStorage.getItem(progressKey) || '{}');
+        saved[questionId] = saved[questionId] || {};
+        saved[questionId][modelId] = data;
+        localStorage.setItem(progressKey, JSON.stringify(saved));
+      } catch (e) {
+        console.warn('localStorage 备份失败:', e);
+      }
+    }
+
     // 后台保存到数据库（静默附加 bucket_index 和 version 用于后台分析）
     if (userInfo) {
       const bucketIndex = getBucketIndex();
@@ -140,10 +177,9 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
 
       if (error) {
         console.error('保存进度失败:', error);
-        // 可以在这里给用户一些提示
       }
     }
-  }, [supabase, userInfo]);
+  }, [supabase, userInfo, version]);
 
   // 侧边栏折叠切换函数
   const toggleSidebar = useCallback(() => {
@@ -179,12 +215,12 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
   // 新增：生成未完成评分的详细提示
   const getIncompleteMessage = () => {
     const items: string[] = [];
-    allQuestions.forEach(q => {
+    allQuestions.forEach((q, idx) => {
       const missing = q.answers
         .filter(a => !evaluations[q.id] || !evaluations[q.id][a.modelId] || evaluations[q.id][a.modelId].score <= 0)
         .map(a => a.modelDisplayName);
       if (missing.length > 0) {
-        items.push(`问题 ${q.id.toUpperCase()}（未评分：${missing.join('、')}）`);
+        items.push(`题目 ${idx + 1}（未评分：${missing.join('、')}）`);
       }
     });
     if (items.length === 0) return '';
@@ -314,6 +350,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       localStorage.removeItem('fineval_user_info');
       localStorage.removeItem('fineval_bucket_index');
       localStorage.removeItem('fineval_selected_version');
+      localStorage.removeItem(`fineval-progress-${version}`);
       
       const params = new URLSearchParams();
       params.set('name', userInfo.name);
@@ -380,7 +417,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
                     index === currentQuestionIndex ? 'bg-blue-100 text-blue-700 font-bold' : 'hover:bg-gray-100'
                   }`}
                 >
-                  问题 {q.id.toUpperCase()}
+                  题目 {index + 1}
                 </button>
               ))}
             </nav>
@@ -403,28 +440,42 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
           </div>
         </div>
 
-        {/* 问题卡片区域 - 响应式高度分配 */}
-        <div className="question-card-mobile question-card-desktop flex flex-col flex-1">
-          <div className="flex-shrink-0 mb-1">
-            <div className="py-2 px-3 bg-white rounded-lg shadow-md border border-gray-200">
-              <h1 className="text-lg md:text-xl font-bold text-gray-800">
-                问题 {currentQuestion.id.toUpperCase()}/{allQuestions.length}:
-              </h1>
-              <p className="mt-1 text-sm md:text-base text-gray-600">{currentQuestion.text}</p>
+        {/* 问题卡片区域 + 桌面端右侧评分面板 */}
+        <div className="flex flex-1 gap-3 overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-shrink-0 mb-1">
+              <div className="py-2 px-3 bg-white rounded-lg shadow-md border border-gray-200">
+                <h1 className="text-lg md:text-xl font-bold text-gray-800">
+                  题目 {currentQuestionIndex + 1}/{allQuestions.length}:
+                </h1>
+                <p className="mt-1 text-sm md:text-base text-gray-600">{currentQuestion.text}</p>
+              </div>
+            </div>
+
+            <div className={`flex-1 grid ${getLayoutClasses()} gap-2 md:gap-3 overflow-y-auto smooth-scroll min-h-0`}>
+              {getAnswersToDisplay().map((answer, index) => (
+                <EvaluationCard
+                  key={`${currentQuestion.id}-${answer.modelId}-${index}`}
+                  questionId={currentQuestion.id}
+                  answer={answer}
+                  evaluation={evaluations[currentQuestion.id]?.[answer.modelId]}
+                  onUpdate={handleUpdateEvaluation}
+                  version={version}
+                  showScoring={false} // 桌面端评分由右侧面板处理
+                />
+              ))}
             </div>
           </div>
 
-          <div className={`flex-1 grid ${getLayoutClasses()} gap-2 md:gap-3 overflow-y-auto smooth-scroll`}>
-            {getAnswersToDisplay().map((answer, index) => (
-              <EvaluationCard
-                key={`${currentQuestion.id}-${answer.modelId}-${index}`}
-                questionId={currentQuestion.id}
-                answer={answer}
-                evaluation={evaluations[currentQuestion.id]?.[answer.modelId]}
-                onUpdate={handleUpdateEvaluation}
-                version={version}
-              />
-            ))}
+          {/* 桌面端右侧评分面板 — 为 iframe 释放最大可视区域 */}
+          <div className="hidden md:block w-56 lg:w-64 bg-white rounded-xl shadow-md overflow-y-auto p-3 shrink-0">
+            <h3 className="text-xs font-bold text-gray-700 mb-2 border-b pb-1">评分面板</h3>
+            <ScoringPanel
+              answers={getAnswersToDisplay()}
+              evaluations={evaluations[currentQuestion.id] || {}}
+              onUpdate={(modelId, data) => handleUpdateEvaluation(currentQuestion.id, modelId, data)}
+              version={version}
+            />
           </div>
         </div>
 
@@ -538,10 +589,21 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
           )}
         </div>
 
-        {/* v2 开放反馈区 */}
+        {/* v2 开放反馈区 — 默认折叠，点击展开 */}
         {version === 'v2' && (
-          <div className="mt-4">
-            <OpenFeedbackForm value={openFeedback} onChange={setOpenFeedback} />
+          <div className="mt-2 flex-shrink-0">
+            <button
+              onClick={() => setFeedbackExpanded((prev) => !prev)}
+              className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <span>开放反馈区 {feedbackExpanded ? '▼' : '▶'}</span>
+              <span className="text-xs text-gray-400">{feedbackExpanded ? '点击折叠' : '点击展开'}</span>
+            </button>
+            {feedbackExpanded && (
+              <div className="mt-2">
+                <OpenFeedbackForm value={openFeedback} onChange={setOpenFeedback} />
+              </div>
+            )}
           </div>
         )}
       </main>
