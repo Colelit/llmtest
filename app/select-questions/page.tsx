@@ -43,6 +43,33 @@ export default function SelectQuestionsPage() {
     setIsLoading(true);
 
     try {
+      // v2 不再分题包，统一使用 bucket_index = 0
+      // 但保留题包参数用于 URL 兼容和数据隔离
+      if (version === 'v2') {
+        const bucketIndex = 0;
+        localStorage.setItem('fineval_bucket_index', String(bucketIndex));
+
+        // 尝试写入 submissions（如果用户没有记录则创建 assigned 状态记录）
+        try {
+          await supabase
+            .from('submissions')
+            .upsert({
+              user_name: userInfo.name,
+              user_profile: userInfo.profile,
+              bucket_index: bucketIndex,
+              status: 'assigned',
+              version: version,
+              created_at: new Date().toISOString(),
+            }, { onConflict: 'user_name,version' });
+        } catch (e) {
+          console.warn('保存 bucket_index 到 Supabase 失败:', e);
+        }
+
+        router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
+        return;
+      }
+
+      // v1 逻辑（已废弃，保留兼容）
       // 1. 优先检查 localStorage 中是否已有绑定的 bucket_index
       const storedBucket = localStorage.getItem('fineval_bucket_index');
       if (storedBucket !== null) {
@@ -54,7 +81,6 @@ export default function SelectQuestionsPage() {
       }
 
       // 2. 查询 Supabase 中是否已有该用户当前版本的 bucket 分配记录
-      // （兼容没有 bucket_index/version 列的旧表，出错则降级到本地逻辑）
       let existingSubmission = null;
       try {
         const { data, error } = await supabase
@@ -65,11 +91,10 @@ export default function SelectQuestionsPage() {
           .maybeSingle();
         if (!error) existingSubmission = data;
       } catch (e) {
-        console.warn('查询 bucket_index 失败（可能列不存在）:', e);
+        console.warn('查询 bucket_index 失败:', e);
       }
 
       if (existingSubmission && existingSubmission.bucket_index !== null && existingSubmission.bucket_index !== undefined) {
-        // 已存在分配记录，直接使用
         const bucketIndex = existingSubmission.bucket_index;
         localStorage.setItem('fineval_bucket_index', String(bucketIndex));
         router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
@@ -90,10 +115,8 @@ export default function SelectQuestionsPage() {
       const count = assignedCount ?? 0;
       const bucketIndex = count % 10;
 
-      // 4. 持久化到 localStorage
       localStorage.setItem('fineval_bucket_index', String(bucketIndex));
 
-      // 5. 尝试持久化到 Supabase（兼容旧表结构）
       try {
         await supabase
           .from('submissions')
@@ -104,13 +127,11 @@ export default function SelectQuestionsPage() {
             status: 'assigned',
             version: version,
             created_at: new Date().toISOString(),
-          }, { onConflict: 'user_name' });
+          }, { onConflict: 'user_name,version' });
       } catch (e) {
-        console.warn('保存 bucket_index 到 Supabase 失败（可能列不存在）:', e);
-        // 不影响继续答题，localStorage 已保存
+        console.warn('保存 bucket_index 到 Supabase 失败:', e);
       }
 
-      // 6. 跳转到 evaluate 页面（带上 version 参数）
       router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
     } catch (err) {
       console.error('分配题包出错:', err);

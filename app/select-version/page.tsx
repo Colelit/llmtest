@@ -37,6 +37,14 @@ export default function SelectVersionPage() {
     router.push(`/guidance?version=${version}`);
   };
 
+  const handleV1Redirect = () => {
+    // v1 已下线，重定向到 v2 并提示
+    localStorage.setItem("fineval_selected_version", "v2");
+    // 将下线提示存入 sessionStorage，guidance 页面读取后显示
+    sessionStorage.setItem("v1_deprecated_notice", "true");
+    router.push("/guidance?version=v2");
+  };
+
   if (!userInfo) {
     return (
       <div className="flex min-h-screen items-center justify-center text-gray-600">
@@ -59,40 +67,33 @@ export default function SelectVersionPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* 旧题包 v1 */}
-          <button
-            onClick={() => handleSelect("v1")}
-            className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 hover:shadow-xl transition-all text-left group"
+          {/* 旧题包 v1 - 已下线 */}
+          <div
+            className="bg-gray-50 p-6 rounded-2xl shadow border-2 border-gray-200 text-left opacity-75"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <h2 className="text-xl font-bold text-gray-500">
                 旧题包（v1）
               </h2>
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                经典版
+              <span className="px-3 py-1 bg-gray-200 text-gray-500 text-sm rounded-full">
+                已下线
               </span>
             </div>
-            <p className="text-gray-600 mb-4 text-sm">
-              覆盖广泛的金融投资场景，适合对RIA进行全面综合评估。
+            <p className="text-gray-500 mb-4 text-sm">
+              该版本评测已结束，感谢您的参与。
             </p>
-            <ul className="text-sm text-gray-500 space-y-2 mb-4">
-              <li className="flex items-center">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2" />
-                题目数量：{v1Count ?? "--"} 道
-              </li>
-              <li className="flex items-center">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2" />
-                评分系统：1-10分刻度 + 开放反馈
-              </li>
-              <li className="flex items-center">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2" />
-                每道题 8 个匿名模型回答
-              </li>
-            </ul>
-            <div className="text-blue-600 font-semibold text-sm group-hover:underline">
-              选择此题库 →
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+              <p className="text-xs text-yellow-800">
+                <strong>提示：</strong>旧题包不再接受新的评测数据，已有数据已归档。如需继续参与评测，请选择右侧新题包（v2）。
+              </p>
             </div>
-          </button>
+            <button
+              onClick={handleV1Redirect}
+              className="w-full py-2 px-4 bg-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+            >
+              前往新题包 →
+            </button>
+          </div>
 
           {/* 新题包 v2 */}
           <button

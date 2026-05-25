@@ -82,12 +82,19 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
         });
       });
 
-      // 3. 加载用户历史进度（按版本隔离）
-      const { data: progress, error } = await supabase
+      // 3. 加载用户历史进度（按版本 + 题包隔离）
+      const bucketIndex = getBucketIndex();
+      let query = supabase
         .from('user_progress')
         .select('question_id, model_id, evaluation_data')
         .eq('user_id', parsedUserInfo.name)
         .eq('version', version);
+
+      if (bucketIndex !== null) {
+        query = query.eq('bucket_index', bucketIndex);
+      }
+
+      const { data: progress, error } = await query;
 
       if (error) {
         console.error('获取进度失败:', error);
@@ -103,11 +110,49 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       }
 
       // 4. 如果 Supabase 无数据，尝试从 localStorage 恢复（降级方案）
+      let hasLocalProgress = false;
       if (!progress || progress.length === 0) {
         const progressKey = `fineval-progress-${version}`;
         try {
           const localProgress = JSON.parse(localStorage.getItem(progressKey) || '{}');
-          Object.entries(localProgress).forEach(([qId, models]: [string, any]) => {
+          if (localProgress && Object.keys(localProgress).length > 0) {
+            hasLocalProgress = true;
+            Object.entries(localProgress).forEach(([qId, models]: [string, any]) => {
+              if (initialEvals[qId]) {
+                Object.entries(models).forEach(([mId, data]: [string, any]) => {
+                  if (initialEvals[qId][mId]) {
+                    initialEvals[qId][mId] = data;
+                    lastQuestionId = qId;
+                  }
+                });
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('localStorage 恢复进度失败:', e);
+        }
+      } else {
+        hasLocalProgress = true;
+      }
+
+      // 5. 如果 user_progress 和 localStorage 都没有，尝试从 submissions 加载已完成的数据
+      if (!hasLocalProgress) {
+        const { data: submission } = await supabase
+          .from('submissions')
+          .select('evaluation_data')
+          .eq('user_name', parsedUserInfo.name)
+          .eq('version', version)
+          .maybeSingle();
+
+        if (submission && submission.evaluation_data) {
+          const evalData = submission.evaluation_data;
+          // v2：恢复开放反馈
+          if (version === 'v2' && evalData.__openFeedback) {
+            setOpenFeedback(evalData.__openFeedback);
+          }
+          // 恢复每题每模型的评分
+          Object.entries(evalData).forEach(([qId, models]: [string, any]) => {
+            if (qId === '__openFeedback') return;
             if (initialEvals[qId]) {
               Object.entries(models).forEach(([mId, data]: [string, any]) => {
                 if (initialEvals[qId][mId]) {
@@ -117,8 +162,6 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
               });
             }
           });
-        } catch (e) {
-          console.warn('localStorage 恢复进度失败:', e);
         }
       }
 
@@ -173,7 +216,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
           bucket_index: bucketIndex,
           version: version,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,question_id,model_id,version' });
+        }, { onConflict: 'user_id,question_id,model_id,version,bucket_index' });
 
       if (error) {
         console.error('保存进度失败:', error);
@@ -198,19 +241,9 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
   };
 
   const isEvaluationComplete = () => {
-    const allScored = Object.values(evaluations).every(questionEvals =>
+    return Object.values(evaluations).every(questionEvals =>
       Object.values(questionEvals).every(modelEval => modelEval.score > 0)
     );
-    if (!allScored) return false;
-    // v2 还需检查 dimensions 是否全部填写
-    if (version === 'v2') {
-      return Object.values(evaluations).every(questionEvals =>
-        Object.values(questionEvals).every(modelEval =>
-          modelEval.dimensions && Object.values(modelEval.dimensions).every(v => v !== 'none')
-        )
-      );
-    }
-    return true;
   };
   // 新增：生成未完成评分的详细提示
   const getIncompleteMessage = () => {
@@ -224,7 +257,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       }
     });
     if (items.length === 0) return '';
-    const limit = 8; // 提示最多显示8项，避免过长
+    const limit = 8;
     const listed = items.slice(0, limit).join('；');
     const remaining = items.length - limit;
     return remaining > 0
@@ -271,24 +304,27 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       submissionData.bucket_index = bucketIndex;  // 题包分配索引
     }
 
-    // 使用 upsert 来更新或插入提交（兼容旧表结构）
-    const { error } = await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name' });
-    if (error && error.message && error.message.includes('bucket_index')) {
-      // 如果是因为 bucket_index 列不存在导致失败，去掉该字段重试
+    // 使用 upsert 来更新或插入提交（按 user_name + version 隔离）
+    let error = (await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name,version' })).error;
+    // 如果失败，尝试去掉 bucket_index 重试（兼容旧表结构）
+    if (error) {
       const { bucket_index: _, ...fallbackData } = submissionData;
-      const { error: retryError } = await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name' });
+      const retryError = (await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name,version' })).error;
       if (!retryError) {
         setSubmitMessage('您的进度已成功保存！');
         setTimeout(() => setSubmitMessage(''), 5000);
         setIsSubmitting(false);
         return;
       }
+      // fallback 也失败了，用 fallback 的错误替换原始错误以便显示真正原因
+      error = retryError;
     }
 
     setIsSubmitting(false);
     if (error) {
-      setSubmitMessage(`保存失败: ${error.message}`);
-      console.error("Early submit error:", error);
+      const debugInfo = JSON.stringify({ code: error.code, message: error.message, details: error.details, hint: error.hint });
+      setSubmitMessage(`保存失败: ${error.message} (code:${error.code})`);
+      console.error("Early submit error:", error, debugInfo);
     } else {
       setSubmitMessage('您的进度已成功保存！您可以随时关闭页面，下次使用相同昵称登录即可继续。');
       // 5秒后自动清除消息
@@ -331,22 +367,25 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
       submissionData.bucket_index = bucketIndex;  // 题包分配索引
     }
 
-    // 最终提交也用 upsert，以防用户直接点这个（兼容旧表结构）
-    let error = null;
-    const upsertResult = await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name' });
-    error = upsertResult.error;
-    if (error && error.message && error.message.includes('bucket_index')) {
+    // 最终提交也用 upsert（按 user_name + version 隔离）
+    let error = (await supabase.from('submissions').upsert(submissionData, { onConflict: 'user_name,version' })).error;
+    // 如果失败，尝试去掉 bucket_index 重试（兼容旧表结构）
+    if (error) {
       const { bucket_index: _, ...fallbackData } = submissionData;
-      const retry = await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name' });
-      error = retry.error;
+      error = (await supabase.from('submissions').upsert(fallbackData, { onConflict: 'user_name,version' })).error;
     }
 
     if (error) {
       setIsSubmitting(false);
-      setSubmitMessage(`提交失败: ${error.message}`);
+      setSubmitMessage(`提交失败: ${error.message} (code:${error.code})`);
+      console.error("Submit error:", error);
     } else {
-      // 提交成功后，清理该用户当前版本的进度
-      await supabase.from('user_progress').delete().eq('user_id', userInfo.name).eq('version', version);
+      // 提交成功后，清理该用户当前版本+当前题包的进度
+      let deleteQuery = supabase.from('user_progress').delete().eq('user_id', userInfo.name).eq('version', version);
+      if (bucketIndex !== null) {
+        deleteQuery = deleteQuery.eq('bucket_index', bucketIndex);
+      }
+      await deleteQuery;
       localStorage.removeItem('fineval_user_info');
       localStorage.removeItem('fineval_bucket_index');
       localStorage.removeItem('fineval_selected_version');
