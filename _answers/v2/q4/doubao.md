@@ -1,9 +1,7 @@
 ---
-questionId: q4
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 ## 一、近期行情走势梳理
 
 以2026年一季报发布日为起点，万控智造股价经历了"阴跌—急涨—高位剧烈震荡"三个阶段：

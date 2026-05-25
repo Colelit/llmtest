@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Question, EvaluationData, LayoutMode, OpenFeedback } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
+import { getAnonymousModelName } from '@/lib/models/registry';
 import EvaluationCard from './EvaluationCard';
 import SidebarToggle from './SidebarToggle';
 import ScoringPanel from './ScoringPanel';
@@ -251,7 +252,7 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
     allQuestions.forEach((q, idx) => {
       const missing = q.answers
         .filter(a => !evaluations[q.id] || !evaluations[q.id][a.modelId] || evaluations[q.id][a.modelId].score <= 0)
-        .map(a => a.modelDisplayName);
+        .map(a => getAnonymousModelName(a.modelId));
       if (missing.length > 0) {
         items.push(`题目 ${idx + 1}（未评分：${missing.join('、')}）`);
       }

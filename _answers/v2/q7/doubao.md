@@ -1,9 +1,7 @@
 ---
-questionId: q7
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 ## 一、估值位置：历史低位，筹码加速出清
 
 当前白酒板块**估值已降至历史极端低位**，同时机构筹码正在快速出清，两者共同构成底部信号。

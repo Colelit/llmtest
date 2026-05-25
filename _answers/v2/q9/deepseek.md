@@ -1,9 +1,7 @@
 ---
-questionId: q9
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 # 天赐材料(002709)投资收益计算与操作建议
 
 ## 一、核心结论速览

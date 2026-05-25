@@ -1,9 +1,7 @@
 ---
-questionId: q2
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 # 中微公司(688012)基本面与经营情况分析（截止2026.05.15）
 
 ## 一、公司核心概况

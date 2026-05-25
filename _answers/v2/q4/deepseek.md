@@ -1,9 +1,7 @@
 ---
-questionId: q4
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 # 万控智造(603070)短期走势分析（以20260515为界限）
 
 ## 一、核心结论速览

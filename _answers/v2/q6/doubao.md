@@ -1,9 +1,7 @@
 ---
-questionId: q6
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 ## 一、2025年季报及年报数据整理
 
 根据五粮液于2026年4月30日披露的经会计差错更正追溯调整后的财务数据，汇总整理如下：

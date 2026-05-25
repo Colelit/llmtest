@@ -1,9 +1,7 @@
 ---
-questionId: q9
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 以下将先列出完整的交易明细与持仓变动，再分别从**累计已实现收益**和**当前持仓浮动盈亏**两个维度展示全貌，最后结合估值与市场情绪给出后市参考。
 
 ---

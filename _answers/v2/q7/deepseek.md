@@ -1,9 +1,7 @@
 ---
-questionId: q7
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 ### 白酒板块：估值低位确认，复苏节奏明确，龙头弹性凸显
 
 **核心结论速览**：

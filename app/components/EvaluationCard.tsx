@@ -1,5 +1,6 @@
 import type { ModelAnswer, EvaluationData, DimensionScores } from "@/lib/types";
 import { ERROR_CATEGORIES, ERROR_CATEGORY_KEYS } from "@/lib/types";
+import { getAnonymousModelName } from "@/lib/models/registry";
 import DimensionScoreGroup from "./v2/DimensionScoreGroup";
 
 type EvaluationCardProps = {
@@ -48,13 +49,13 @@ export default function EvaluationCard({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
       <div className="p-2 bg-gray-700 text-white">
-        <h3 className="text-lg font-semibold">{answer.modelDisplayName}</h3>
+        <h3 className="text-lg font-semibold">{getAnonymousModelName(answer.modelId)}</h3>
       </div>
       <div className="flex-1 border-t border-b border-gray-200">
         <iframe
           srcDoc={answer.contentHtml}
           className="w-full h-full min-h-[300px] border-0 evaluation-iframe"
-          title={`${answer.modelDisplayName}'s Answer`}
+          title={`${getAnonymousModelName(answer.modelId)}'s Answer`}
         />
       </div>
       {/* 仅在移动端或显式要求时显示评分区 */}

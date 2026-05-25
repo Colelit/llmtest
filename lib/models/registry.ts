@@ -26,8 +26,8 @@ export const MODEL_REGISTRY: ModelInfo[] = [
   { slug: 'doubao', displayName: '豆包', family: 'generic', source: 'manual', adapterType: 'manual', isActive: true },
 
   // 垂类模型（截图录入，保留图片引用）
-  { slug: 'maxiaocai', displayName: '匿名模型C', family: 'vertical', source: 'manual_image', adapterType: 'manual', isActive: true },
-  { slug: 'tonghuashun', displayName: '匿名模型D', family: 'vertical', source: 'manual_image', adapterType: 'manual', isActive: true },
+  { slug: 'maxiaocai', displayName: '蚂小财', family: 'vertical', source: 'manual_image', adapterType: 'manual', isActive: true },
+  { slug: 'tonghuashun', displayName: '同花顺', family: 'vertical', source: 'manual_image', adapterType: 'manual', isActive: true },
 
   // 垂类预留（未激活）
   { slug: 'wind-alice', displayName: 'Wind Alice', family: 'vertical', source: 'scrape', adapterType: 'scrape', isActive: false },
@@ -46,6 +46,24 @@ export function getActiveModels(): ModelInfo[] {
  */
 export function getModelBySlug(slug: string): ModelInfo | undefined {
   return MODEL_REGISTRY.find(m => m.slug === slug);
+}
+
+/**
+ * 模型匿名化映射（评测期间显示用）
+ * key 为数据库中存储的 modelId
+ */
+const ANONYMOUS_NAMES: Record<string, string> = {
+  'Deepseek': '模型A',
+  'model-b': '模型B',
+  'maxiaocai': '模型C',
+  'tonghuashun': '模型D',
+};
+
+/**
+ * 获取模型的匿名显示名（评测期间使用）
+ */
+export function getAnonymousModelName(modelId: string): string {
+  return ANONYMOUS_NAMES[modelId] || modelId;
 }
 
 /**

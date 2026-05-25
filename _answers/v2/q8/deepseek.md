@@ -1,9 +1,7 @@
 ---
-questionId: q8
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 # 特朗普2026年访华对半导体板块影响分析：聚焦市场情绪与涨跌预测
 
 ## 一、核心结论速览

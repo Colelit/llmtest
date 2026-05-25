@@ -2,6 +2,7 @@
 
 import type { ModelAnswer, EvaluationData, DimensionScores } from "@/lib/types";
 import { ERROR_CATEGORIES, ERROR_CATEGORY_KEYS } from "@/lib/types";
+import { getAnonymousModelName } from "@/lib/models/registry";
 
 interface ScoringPanelProps {
   answers: ModelAnswer[];
@@ -69,7 +70,7 @@ export default function ScoringPanel({
 
         return (
           <div key={answer.modelId} className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-            <h4 className="text-xs font-bold text-gray-800 mb-1.5 truncate">{answer.modelDisplayName}</h4>
+            <h4 className="text-xs font-bold text-gray-800 mb-1.5 truncate">{getAnonymousModelName(answer.modelId)}</h4>
 
             {/* 1-10 分评分 */}
             <div className="mb-2">

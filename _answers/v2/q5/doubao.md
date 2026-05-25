@@ -1,9 +1,7 @@
 ---
-questionId: q5
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 ## 一、关键时间节点与股价数据梳理
 
 | 日期 | 事件 |

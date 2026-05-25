@@ -1,9 +1,7 @@
 ---
-questionId: q3
 modelId: Deepseek
-modelDisplayName: 匿名模型A
+modelDisplayName: DeepSeek
 ---
-
 # 东鹏特饮2026年Q1行业表现与估值分析
 
 ## 一、2026年第一季度行业表现总览

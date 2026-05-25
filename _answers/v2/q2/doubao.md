@@ -1,9 +1,7 @@
 ---
-questionId: q2
 modelId: model-b
-modelDisplayName: 匿名模型B
+modelDisplayName: 豆包
 ---
-
 > **数据时效声明**：以下分析基于中微公司（688012.SH）截至2026年5月15日的公开信息，财务数据覆盖2025年全年及2026年第一季度。
 
 ---
