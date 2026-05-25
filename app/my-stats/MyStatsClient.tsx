@@ -83,13 +83,25 @@ interface OpenFeedback {
   interestedQuestions?: string;
 }
 
+interface StatsResult {
+  modelScoreData: { name: string; fullId: string; score: number }[];
+  questionScores: any[];
+  radarData: any[];
+  modelDimensionAvgs: {
+    modelId: string;
+    modelName: string;
+    totalScore: number;
+    dimensions: Record<string, { avg: number; severity: string; text: string; bgClass: string }>;
+  }[];
+  allModels: string[];
+  openFeedback: OpenFeedback | null;
+  totalQuestions: number;
+}
+
 interface SubmissionData {
   user_name: string;
   user_profile: any;
-  evaluation_data: {
-    [questionId: string]: {
-      [modelId: string]: EvaluationData;
-    };
+  evaluation_data: Record<string, any> & {
     __openFeedback?: OpenFeedback;
   };
   duration_seconds: number;
@@ -149,7 +161,7 @@ export default function MyStatsPage() {
   }, [name, supabase]);
 
   // ============ 数据加工 ============
-  const stats = useMemo(() => {
+  const stats = useMemo<StatsResult | null>(() => {
     if (!data || !data.evaluation_data) return null;
 
     const evalData = data.evaluation_data;
