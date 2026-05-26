@@ -1,0 +1,502 @@
+[
+  {
+    "id": 10,
+    "created_at": "2026-05-22T09:55:57.289642+00:00",
+    "user_name": "test1",
+    "user_profile": {
+      "gender": "不愿透露",
+      "usageFrequency": "每天",
+      "financialLearningYears": "无基础（0年）"
+    },
+    "evaluation_data": {
+      "q1": {
+        "model-b": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "obvious"
+          }
+        }
+      },
+      "q2": {
+        "model-b": {
+          "cons": [],
+          "score": 6,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q3": {
+        "model-b": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "obvious",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "obvious",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q4": {
+        "model-b": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "slight",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "severe",
+            "conceptError": "none",
+            "riskBlindness": "obvious",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q5": {
+        "model-b": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "slight",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "slight",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 2,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "obvious",
+            "valueMisalignment": "obvious"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "slight",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q6": {
+        "model-b": {
+          "cons": [],
+          "score": 2,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "obvious"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 5,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "slight",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "obvious"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "slight"
+          }
+        }
+      },
+      "q7": {
+        "model-b": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "slight"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 4,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "slight",
+            "precisionIllusion": "slight",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "slight",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q8": {
+        "model-b": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "none",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "slight"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 2,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "severe"
+          }
+        }
+      },
+      "q9": {
+        "model-b": {
+          "cons": [],
+          "score": 3,
+          "dimensions": {
+            "logicError": "slight",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "Deepseek": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "severe",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "maxiaocai": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "severe",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        },
+        "tonghuashun": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "severe",
+            "conceptError": "none",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "none"
+          }
+        }
+      },
+      "q10": {
+        "doubao": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "none",
+            "riskBlindness": "obvious",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "obvious"
+          }
+        },
+        "model-b": {
+          "cons": [],
+          "score": 1,
+          "dimensions": {
+            "logicError": "obvious",
+            "conceptError": "obvious",
+            "riskBlindness": "none",
+            "dataHallucination": "none",
+            "precisionIllusion": "none",
+            "valueMisalignment": "obvious"
+          }
+        }
+      },
+      "__openFeedback": {
+        "suggestions": "",
+        "modelAComment": "",
+        "modelBComment": "",
+        "supplementLeft": "",
+        "supplementRight": "",
+        "interestedQuestions": ""
+      }
+    },
+    "duration_seconds": 22,
+    "status": "completed",
+    "bucket_index": 1,
+    "version": "v2"
+  }
+]
