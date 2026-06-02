@@ -1,4 +1,4 @@
-import { getQuestionsForBucket } from '@/lib/questions';
+import { getQuestionsForBucket, getQuestionsByIds } from '@/lib/questions';
 import { loadQuestions } from '@/lib/content/loader';
 import EvaluationClient from '@/app/components/EvaluationClient';
 import { seededShuffle } from '@/lib/utils';
@@ -28,21 +28,23 @@ export default async function EvaluatePage({ searchParams }: PageProps) {
 
   let questionsToDisplay: Question[];
 
-  if (bucketParam !== undefined) {
+  // 优先使用 ids 参数（v2 分组题目集合）
+  if (idsParam) {
+    const idsString = Array.isArray(idsParam) ? idsParam[0] : idsParam;
+    const ids = idsString.split(',').map(s => s.trim()).filter(Boolean);
+    questionsToDisplay = getQuestionsByIds(ids, allQuestions);
+  }
+  // 其次使用 bucket 参数（v1 题包）
+  else if (bucketParam !== undefined) {
     const bucketIndex = parseInt(Array.isArray(bucketParam) ? bucketParam[0] : bucketParam, 10);
     if (!isNaN(bucketIndex)) {
       questionsToDisplay = getQuestionsForBucket(bucketIndex, allQuestions);
     } else {
       questionsToDisplay = allQuestions;
     }
-  } else if (idsParam) {
-    const idsString = Array.isArray(idsParam) ? idsParam[0] : idsParam;
-    const ids = idsString.split(',').map(s => s.trim()).filter(Boolean);
-    const questionMap = new Map(allQuestions.map(q => [q.id, q]));
-    questionsToDisplay = ids
-      .map(id => questionMap.get(id))
-      .filter((q): q is Question => q !== undefined);
-  } else if (seed) {
+  }
+  // 再次使用 seed 参数（随机抽取）
+  else if (seed) {
     const seedString = Array.isArray(seed) ? seed[0] : seed;
     const shuffled = seededShuffle(allQuestions, seedString);
     let count = 5;
@@ -53,7 +55,9 @@ export default async function EvaluatePage({ searchParams }: PageProps) {
       }
     }
     questionsToDisplay = shuffled.slice(0, count);
-  } else {
+  }
+  // 默认显示全部题目
+  else {
     questionsToDisplay = allQuestions;
   }
 

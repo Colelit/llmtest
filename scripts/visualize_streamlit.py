@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import pandas as pd
 import streamlit as st
 import altair as alt
@@ -9,6 +10,42 @@ st.set_page_config(page_title="RIA 评测可视化 (v2)", layout="wide")
 
 DEFAULT_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "submissions_rows.json")
 Q_TYPE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "q_type.json")
+
+# ============ 题目分类配置 ============
+QUESTION_CATEGORIES = {
+    "现况解析": ["q1", "q2", "q3", "q5", "q6", "q7"],
+    "涨跌预测": ["q4", "q8"],
+    "投资建议": ["q9"]
+}
+
+CATEGORY_ORDER = ["现况解析", "涨跌预测", "投资建议"]
+
+def get_question_category(qid: str) -> str:
+    """根据题目ID返回类别"""
+    for category, qids in QUESTION_CATEGORIES.items():
+        if str(qid) in qids:
+            return category
+    return "其他"
+
+def get_dynamic_range(values, padding=0.1, min_val=None, max_val=None):
+    """计算动态区间，上下各留 padding 空间"""
+    v_min = values.min() if hasattr(values, 'min') else min(values)
+    v_max = values.max() if hasattr(values, 'max') else max(values)
+
+    if v_min == v_max:
+        return v_min - 1, v_max + 1
+
+    range_val = v_max - v_min
+    lower = math.floor(v_min - range_val * padding)
+    upper = math.ceil(v_max + range_val * padding)
+
+    # 应用最小最大值限制
+    if min_val is not None:
+        lower = max(lower, min_val)
+    if max_val is not None:
+        upper = min(upper, max_val)
+
+    return lower, upper
 
 # ============ 模型名称映射 ============
 MODEL_DISPLAY_MAP = {
@@ -213,12 +250,17 @@ def pie_chart_from_series(title, series):
     st.altair_chart(chart, use_container_width=False)
 
 
-def bar_chart_with_error(title_text, df, x_field, y_field, std_field=None, tooltip_fields=None, sort_desc=True, y_domain=None):
+def bar_chart_with_error(title_text, df, x_field, y_field, std_field=None, tooltip_fields=None, sort_desc=True, y_domain=None, dynamic_axis=False):
     if df.empty:
         st.info(f"{title_text}暂无数据")
         return
 
     sort_value = alt.SortField(field=y_field, order="descending" if sort_desc else "ascending")
+
+    # 动态计算Y轴范围
+    if dynamic_axis and y_domain is None:
+        y_min, y_max = get_dynamic_range(df[y_field], padding=0.1)
+        y_domain = [y_min, y_max]
 
     bars = alt.Chart(df).mark_bar().encode(
         x=alt.X(f"{x_field}:N", sort=sort_value, title=title_text),
@@ -255,8 +297,8 @@ def bar_chart_with_error(title_text, df, x_field, y_field, std_field=None, toolt
     st.altair_chart(chart, use_container_width=True)
 
 
-def plot_score_radar_chart(title_text, radar_df, categories):
-    """基于平均得分的雷达图（0-10分）"""
+def plot_score_radar_chart(title_text, radar_df, categories, fill_area=True, use_contrast_colors=False, dynamic_range=False):
+    """基于平均得分的雷达图（0-10分或动态范围）"""
     if radar_df.empty:
         st.info(f"{title_text}暂无数据")
         return
@@ -266,6 +308,20 @@ def plot_score_radar_chart(title_text, radar_df, categories):
     categories_clean = [str(c).strip() for c in categories]
     plot_df["category"] = plot_df["category"].astype(str).str.strip()
 
+    # 对比色配色方案
+    if use_contrast_colors:
+        color_discrete_sequence = [
+            "#FF6B6B",  # 红色
+            "#4ECDC4",  # 青色
+            "#45B7D1",  # 蓝色
+            "#96CEB4",  # 绿色
+            "#FFEAA7",  # 黄色
+            "#DDA0DD",  # 紫色
+        ]
+        color_discrete_sequence = color_discrete_sequence[:len(plot_df["model_name"].unique())]
+    else:
+        color_discrete_sequence = None
+
     fig = px.line_polar(
         plot_df,
         r="value",
@@ -273,11 +329,30 @@ def plot_score_radar_chart(title_text, radar_df, categories):
         color="model_name",
         line_close=True,
         markers=True,
+        color_discrete_sequence=color_discrete_sequence,
     )
+
+    # 向外填充
+    if fill_area:
+        fig.update_traces(fill='toself')
+
+    # 计算动态Y轴范围
+    if dynamic_range:
+        min_val = math.floor(plot_df["value"].min())
+        max_val = math.ceil(plot_df["value"].max())
+        if min_val == max_val:
+            min_val -= 1
+            max_val += 1
+        radial_range = [min_val, max_val]
+        dtick_val = 1
+    else:
+        radial_range = [0, 10]
+        dtick_val = 2
+
     fig.update_layout(
         title=title_text,
         polar=dict(
-            radialaxis=dict(range=[0, 10], dtick=2, showline=True),
+            radialaxis=dict(range=radial_range, dtick=dtick_val, showline=True),
             angularaxis=dict(
                 showline=True,
                 rotation=90,
@@ -367,20 +442,148 @@ def build_severity_radar_dataset(dimension_df: pd.DataFrame, category_col: str, 
     return radar_df
 
 
+def build_category_scores(eval_df: pd.DataFrame) -> pd.DataFrame:
+    """计算每个模型在各类题目上的平均得分"""
+    eval_df["category"] = eval_df["question_id"].apply(get_question_category)
+    category_scores = eval_df.groupby(["model_name", "category"])["score"].mean().reset_index()
+    category_scores = category_scores.rename(columns={"score": "value"})
+
+    # 过滤掉"其他"类别
+    category_scores = category_scores[category_scores["category"].isin(CATEGORY_ORDER)]
+
+    if category_scores.empty:
+        return pd.DataFrame()
+
+    all_models = sorted(eval_df["model_name"].unique().tolist())
+    grid = pd.MultiIndex.from_product([all_models, CATEGORY_ORDER], names=["model_name", "category"])
+    grid_df = pd.DataFrame(index=grid).reset_index()
+    radar_df = grid_df.merge(category_scores, on=["model_name", "category"], how="left")
+    radar_df["value"] = radar_df["value"].fillna(0.0)
+    radar_df["category"] = pd.Categorical(radar_df["category"], categories=CATEGORY_ORDER, ordered=True)
+    return radar_df
+
+
+def build_model_dimension_severity(dimension_df: pd.DataFrame) -> pd.DataFrame:
+    """计算模型在六维度上的平均严重度（用于模型-维度雷达图）"""
+    model_dim = dimension_df.groupby(["model_name", "dimension"])["severity_num"].mean().reset_index()
+    model_dim = model_dim.rename(columns={"severity_num": "value"})
+
+    all_models = sorted(dimension_df["model_name"].unique().tolist())
+    grid = pd.MultiIndex.from_product([all_models, DIMENSION_LABELS_LIST], names=["model_name", "category"])
+    grid_df = pd.DataFrame(index=grid).reset_index()
+    radar_df = grid_df.merge(model_dim, left_on=["model_name", "category"], right_on=["model_name", "dimension"], how="left")
+    radar_df = radar_df.rename(columns={"dimension": "original_dimension"})
+    radar_df["value"] = radar_df["value"].fillna(0.0)
+    radar_df["category"] = pd.Categorical(radar_df["category"], categories=DIMENSION_LABELS_LIST, ordered=True)
+    return radar_df[["model_name", "category", "value"]]
+
+
+def build_dimension_frequency(dimension_df: pd.DataFrame) -> pd.DataFrame:
+    """计算六维度错误频次（模型×维度）"""
+    freq = dimension_df.groupby(["model_name", "dimension"]).size().reset_index(name="frequency")
+    return freq
+
+
+def get_group_stats():
+    """从API获取分组统计信息"""
+    try:
+        import requests
+        response = requests.get("http://localhost:10005/api/group-stats", timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+    except Exception:
+        return None
+
+
+def load_from_supabase():
+    """从 Supabase 直接获取最新数据"""
+    try:
+        from export_supabase import get_client
+        client = get_client()
+
+        result = client.table('submissions').select('*').eq('version', 'v2').execute()
+        if result.data:
+            return result.data
+        return None
+    except Exception as e:
+        print(f"从 Supabase 加载数据失败: {e}")
+        return None
+
+
 def main():
     st.title("RIA 评测数据可视化 (v2)")
 
     st.sidebar.header("数据设置")
-    data_path = st.sidebar.text_input("数据文件路径", DEFAULT_DATA_PATH)
+
+    # 数据源选择
+    data_source = st.sidebar.radio("数据源", ["Supabase 实时数据", "本地 JSON 文件"], index=0)
+
+    submissions = None
+    data_source_info = ""
+
+    if data_source == "Supabase 实时数据":
+        submissions = load_from_supabase()
+        if submissions:
+            data_source_info = f"✓ Supabase 实时数据 ({len(submissions)} 条记录)"
+            last_updated = datetime.datetime.now().strftime("%H:%M:%S")
+            st.sidebar.success(f"{data_source_info} (更新于 {last_updated})")
+        else:
+            st.sidebar.error("无法连接 Supabase，使用本地数据")
+            data_source = "本地 JSON 文件"
+
+    if data_source == "本地 JSON 文件":
+        data_path = st.sidebar.text_input("数据文件路径", DEFAULT_DATA_PATH)
+        if os.path.exists(data_path):
+            submissions = load_json(data_path)
+            data_source_info = f"本地文件: {os.path.basename(data_path)}"
+            st.sidebar.info(data_source_info)
+        else:
+            st.error(f"数据文件不存在：{data_path}")
+            st.stop()
+
+    view_mode = st.sidebar.radio("视图模式", ["全题目视图", "分组视图"], index=0)
     status_filter = st.sidebar.radio("筛选提交状态", ["全部", "已完成"], index=1)
     exclude_zero = st.sidebar.checkbox("排除未评分（0分）", value=True)
 
-    if not os.path.exists(data_path):
-        st.error(f"数据文件不存在：{data_path}")
+    if not submissions:
+        st.error("无法加载数据")
         st.stop()
 
-    submissions = load_json(data_path)
     profiles_df, eval_df, dimension_df, open_feedback_df = build_profiles_and_evals(submissions)
+
+    # ==================== 分组统计 ====================
+    if view_mode == "分组视图":
+        st.subheader("分组统计")
+        group_data = get_group_stats()
+
+        if group_data and group_data.get('groups'):
+            summary = group_data.get('summary', {})
+            groups = group_data.get('groups', [])
+
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("总分组数", summary.get('total_groups', 0))
+            col2.metric("目标用户数", summary.get('total_target_users', 0))
+            col3.metric("已完成用户数", summary.get('total_current_users', 0))
+            col4.metric("总体进度", f"{summary.get('overall_progress', 0):.1f}%")
+
+            # 分组进度表格
+            st.write("各组进度：")
+            group_table = []
+            for group in groups:
+                progress = (group.get('current_users', 0) / group.get('target_users', 1)) * 100
+                group_table.append({
+                    "组别": f"组 {group['group_index']}",
+                    "题目": ', '.join(group.get('question_ids', [])),
+                    "进度": f"{group.get('current_users', 0)}/{group.get('target_users', 0)}",
+                    "完成度": f"{progress:.1f}%",
+                })
+
+            if group_table:
+                st.dataframe(pd.DataFrame(group_table), use_container_width=True, hide_index=True)
+        else:
+            st.info("暂无分组数据或API未连接")
 
     # 题目分类加载
     qid_to_chain, qid_to_stage, chain_order, stage_order = load_q_types(Q_TYPE_PATH)
@@ -512,57 +715,66 @@ def main():
     else:
         st.info("暂无六维度数据")
 
-    # ==================== ② 模型六维度雷达图 ====================
-    st.subheader("模型六维度错误雷达图")
-    st.caption("数值越高表示错误越严重（0=无，1=轻微，2=明显，3=严重）")
+    # ==================== ② 六维度错误频次热力图（模型×维度） ====================
+    st.subheader("六维度错误频次热力图（模型 × 维度）")
+    st.caption("颜色越深表示该模型在该维度上的错误出现次数越多。浅黄=次数少，深绿=次数多。")
     if not dimension_df_scored.empty:
-        radar_dim_df = build_severity_radar_dataset(dimension_df_scored, "dimension", DIMENSION_LABELS_LIST)
-        plot_severity_radar_chart("六维度错误分布（按模型）", radar_dim_df, DIMENSION_LABELS_LIST)
-    else:
-        st.info("暂无六维度数据")
+        freq_df = build_dimension_frequency(dimension_df_scored)
 
-    # ==================== ③ 维度-题目热力图 ====================
-    st.subheader("维度-题目热力图")
-    st.caption("每道题在各维度上的平均错误严重度")
-    if not dimension_df_scored.empty:
-        q_heat = dimension_df_scored.groupby(["question_id", "dimension"])["severity_num"].mean().reset_index()
+        # 确保完整网格
+        all_models = sorted(dimension_df_scored["model_name"].unique())
+        grid = pd.MultiIndex.from_product([all_models, DIMENSION_LABELS_LIST], names=["model_name", "dimension"])
+        grid_df = pd.DataFrame(index=grid).reset_index()
+        freq_df = grid_df.merge(freq_df, on=["model_name", "dimension"], how="left").fillna({"frequency": 0})
 
-        # 排序题目ID
-        def qid_sort_val(q):
-            try:
-                return int(q)
-            except Exception:
-                return float('inf')
-        all_qids = sorted(dimension_df_scored["question_id"].unique(), key=qid_sort_val)
+        # 计算动态颜色范围
+        max_freq = freq_df["frequency"].max()
 
-        # 完整网格
-        grid_q = pd.MultiIndex.from_product([all_qids, DIMENSION_LABELS_LIST], names=["question_id", "dimension"])
-        grid_q_df = pd.DataFrame(index=grid_q).reset_index()
-        q_heat = grid_q_df.merge(q_heat, on=["question_id", "dimension"], how="left").fillna({"severity_num": 0})
-
-        qheat_chart = alt.Chart(q_heat).mark_rect(stroke="white", strokeWidth=0.5).encode(
+        freq_heat = alt.Chart(freq_df).mark_rect(stroke="white", strokeWidth=1).encode(
             x=alt.X("dimension:N", title="维度", sort=DIMENSION_LABELS_LIST),
-            y=alt.Y("question_id:N", title="题目", sort=all_qids),
+            y=alt.Y("model_name:N", title="模型", sort=all_models),
             color=alt.Color(
-                "severity_num:Q",
-                title="严重度",
-                scale=SEVERITY_COLOR_SCALE,
-                legend=alt.Legend(title="严重度", values=[0, 1, 2, 3], labelExpr="datum.value == 0 ? '无' : datum.value == 1 ? '轻微' : datum.value == 2 ? '明显' : '严重'"),
+                "frequency:Q",
+                title="错误频次",
+                scale=alt.Scale(
+                    domain=[0, max_freq],
+                    scheme="greens",
+                ),
+                legend=alt.Legend(title="频次"),
             ),
             tooltip=[
-                alt.Tooltip("question_id:N", title="题目"),
+                alt.Tooltip("model_name:N", title="模型"),
                 alt.Tooltip("dimension:N", title="维度"),
-                alt.Tooltip("severity_num:Q", title="平均严重度", format=".2f"),
+                alt.Tooltip("frequency:Q", title="错误次数", format=".0f"),
             ],
-        ).properties(height=max(400, len(all_qids) * 35))
+        ).properties(height=max(300, len(all_models) * 45))
 
-        st.altair_chart(qheat_chart, use_container_width=True)
+        freq_text = alt.Chart(freq_df).mark_text(baseline="middle", fontSize=12).encode(
+            x=alt.X("dimension:N", sort=DIMENSION_LABELS_LIST),
+            y=alt.Y("model_name:N", sort=all_models),
+            text=alt.Text("frequency:Q", format=".0f"),
+            color=alt.condition(alt.datum.frequency > max_freq * 0.6, alt.value("white"), alt.value("#333")),
+        )
+
+        st.altair_chart(freq_heat + freq_text, use_container_width=True)
     else:
-        st.info("暂无维度-题目数据")
+        st.info("暂无六维度频次数据")
+
+    # ==================== ③ 模型在各类题目上的得分雷达图 ====================
+    st.subheader("模型在各类题目上的得分雷达图")
+    st.caption("角度=题目类别（现况解析/涨跌预测/投资建议），每个模型一条线，向外填充，使用对比色。动态Y轴范围（最低分向下取整，最高分向上取整）")
+    if not eval_df_scored.empty:
+        category_radar_df = build_category_scores(eval_df_scored)
+        if not category_radar_df.empty:
+            plot_score_radar_chart("题目分类得分（按模型）", category_radar_df, CATEGORY_ORDER, fill_area=True, use_contrast_colors=True, dynamic_range=True)
+        else:
+            st.info("暂无题目分类数据（题目ID格式需为 q1, q2, ...）")
+    else:
+        st.info("暂无题目分类数据")
 
     # ==================== ④ 得分 vs 错误严重性散点图 ====================
     st.subheader("模型平均分 vs 六维度错误总分")
-    st.caption("X轴为模型平均得分（越高越好），Y轴为六维度错误加权总分（越低越好）。右下角的点表示"得分高但错误也多"的异常。")
+    st.caption("X轴为模型平均得分（越高越好），Y轴为六维度错误加权总分（越低越好）。右下角的点表示\"得分高但错误也多\"的异常。动态坐标轴范围。")
     if not eval_df_scored.empty and not dimension_df_scored.empty:
         model_avg_score = eval_df_scored.groupby("model_name")["score"].mean().reset_index().rename(columns={"score": "avg_score"})
         model_avg_severity = dimension_df_scored.groupby("model_name")["severity_num"].mean().reset_index().rename(columns={"severity_num": "avg_severity"})
@@ -570,9 +782,13 @@ def main():
 
         scatter_df = model_avg_score.merge(model_avg_severity, on="model_name").merge(model_severity_total, on="model_name")
 
+        # 动态坐标轴范围
+        x_min, x_max = get_dynamic_range(scatter_df["avg_score"], padding=0.1, min_val=0, max_val=10)
+        y_min, y_max = get_dynamic_range(scatter_df["avg_severity"], padding=0.1, min_val=0, max_val=3)
+
         scatter = alt.Chart(scatter_df).mark_circle(size=200, opacity=0.8).encode(
-            x=alt.X("avg_score:Q", title="平均得分", scale=alt.Scale(domain=[0, 10])),
-            y=alt.Y("avg_severity:Q", title="平均严重度（0-3）", scale=alt.Scale(domain=[0, 3])),
+            x=alt.X("avg_score:Q", title="平均得分", scale=alt.Scale(domain=[x_min, x_max])),
+            y=alt.Y("avg_severity:Q", title="平均严重度（0-3）", scale=alt.Scale(domain=[y_min, y_max])),
             color=alt.Color("model_name:N", title="模型"),
             size=alt.Size("total_severity:Q", title="错误总次数"),
             tooltip=["model_name", alt.Tooltip("avg_score:Q", format=".2f"), alt.Tooltip("avg_severity:Q", format=".2f"), alt.Tooltip("total_severity:Q", format=".0f")],
@@ -637,6 +853,18 @@ def main():
         plot_score_radar_chart("阶段（平均分）", radar_stage_df, stage_order)
     else:
         st.info("暂无阶段分类或评分数据")
+
+    # ==================== 模型六维度错误雷达图 ====================
+    st.subheader("模型六维度错误雷达图")
+    st.caption("角度=六维度，每个模型一条线，浅蓝到深蓝渐变。数值越高表示错误越严重（0=无，1=轻微，2=明显，3=严重）")
+    if not dimension_df_scored.empty:
+        model_dim_radar_df = build_model_dimension_severity(dimension_df_scored)
+        if not model_dim_radar_df.empty:
+            plot_severity_radar_chart("六维度错误分布（按模型）", model_dim_radar_df, DIMENSION_LABELS_LIST)
+        else:
+            st.info("暂无六维度数据")
+    else:
+        st.info("暂无六维度数据")
 
     # ==================== ⑥ 开放反馈汇总面板 ====================
     st.subheader("开放反馈汇总")

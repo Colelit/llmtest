@@ -23,12 +23,29 @@ export const BUCKET_MATRIX = [
 ];
 
 export function getQuestionsForBucket(bucketIndex: number, allQuestions: Question[]): Question[] {
-  // v2 题包使用 q1/q2 格式 ID，不使用 BUCKET_MATRIX，直接返回全部题目
+  // v2 题包使用 q1/q2 格式 ID，检查是否需要使用 BUCKET_MATRIX
   if (allQuestions.length > 0 && allQuestions[0].id.startsWith('q')) {
+    // v2 题目，根据 question_set 或默认返回固定题目
+    // 这里返回全部题目，实际筛选在调用方处理
     return allQuestions;
   }
+  // v1 题包，使用 BUCKET_MATRIX
   const pack = BUCKET_MATRIX[bucketIndex % BUCKET_MATRIX.length];
   const questionIds = ['1', ...pack];
+  const questionMap = new Map(allQuestions.map(q => [q.id, q]));
+  return questionIds
+    .map(id => questionMap.get(id))
+    .filter((q): q is Question => q !== undefined);
+}
+
+/**
+ * 根据题目ID集合获取题目（用于v2分组）
+ */
+export function getQuestionsByIds(questionIds: string[], allQuestions: Question[]): Question[] {
+  if (questionIds.length === 0) {
+    return allQuestions;
+  }
+
   const questionMap = new Map(allQuestions.map(q => [q.id, q]));
   return questionIds
     .map(id => questionMap.get(id))

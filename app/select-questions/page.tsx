@@ -43,30 +43,83 @@ export default function SelectQuestionsPage() {
     setIsLoading(true);
 
     try {
-      // v2 不再分题包，统一使用 bucket_index = 0
-      // 但保留题包参数用于 URL 兼容和数据隔离
       if (version === 'v2') {
-        const bucketIndex = 0;
-        localStorage.setItem('fineval_bucket_index', String(bucketIndex));
-
-        // 尝试写入 submissions（如果用户没有记录则创建 assigned 状态记录）
+        // v2 使用新的分组分配逻辑
         try {
-          await supabase
+          // 1. 检查用户是否已有分组分配
+          const { data: existingSubmission } = await supabase
             .from('submissions')
-            .upsert({
-              user_name: userInfo.name,
-              user_profile: userInfo.profile,
-              bucket_index: bucketIndex,
-              status: 'assigned',
-              version: version,
-              created_at: new Date().toISOString(),
-            }, { onConflict: 'user_name,version' });
-        } catch (e) {
-          console.warn('保存 bucket_index 到 Supabase 失败:', e);
-        }
+            .select('group_index, question_set, bucket_index')
+            .eq('user_name', userInfo.name)
+            .eq('version', version)
+            .maybeSingle();
 
-        router.push(`/evaluate?version=${version}&bucket=${bucketIndex}`);
-        return;
+          let groupIndex: number;
+          let questionSet: string[];
+          let bucketIndex: number;
+
+          if (existingSubmission && existingSubmission.group_index !== null) {
+            // 用户已有分组，使用现有分配
+            groupIndex = existingSubmission.group_index!;
+            questionSet = existingSubmission.question_set || ['q0', 'q1', 'q2', 'q3'];
+            bucketIndex = existingSubmission.bucket_index || 0;
+
+            console.log(`用户 ${userInfo.name} 已有分组 ${groupIndex}，题目集合: ${questionSet}`);
+          } else {
+            // 2. 新用户，获取下一个可用分组
+            const response = await fetch('/api/get-next-group');
+            if (!response.ok) {
+              throw new Error('获取分组失败');
+            }
+
+            const groupData = await response.json();
+            groupIndex = groupData.group_index;
+            questionSet = groupData.question_set;
+            bucketIndex = 0; // v2 统一使用 bucket_index = 0
+
+            console.log(`新用户 ${userInfo.name} 分配到组 ${groupIndex}，题目集合: ${questionSet}`);
+
+            // 3. 创建用户记录
+            await supabase
+              .from('submissions')
+              .upsert({
+                user_name: userInfo.name,
+                user_profile: userInfo.profile,
+                bucket_index: bucketIndex,
+                group_index: groupIndex,
+                question_set: questionSet,
+                status: 'assigned',
+                version: version,
+                created_at: new Date().toISOString(),
+              }, { onConflict: 'user_name,version' });
+
+            // 4. 更新分组的用户计数
+            await fetch('/api/get-next-group', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ group_index: groupIndex })
+            });
+          }
+
+          // 保存到 localStorage
+          localStorage.setItem('fineval_bucket_index', String(bucketIndex));
+          localStorage.setItem('fineval_group_index', String(groupIndex));
+          localStorage.setItem('fineval_question_set', JSON.stringify(questionSet));
+
+          // 跳转到评估页面，传递题目集合参数
+          router.push(`/evaluate?version=${version}&bucket=${bucketIndex}&ids=${questionSet.join(',')}`);
+          return;
+
+        } catch (e) {
+          console.error('v2 分组分配失败:', e);
+          // 降级处理：使用默认分组
+          const defaultQuestionSet = ['q0', 'q1', 'q2', 'q3'];
+          localStorage.setItem('fineval_bucket_index', '0');
+          localStorage.setItem('fineval_group_index', '0');
+          localStorage.setItem('fineval_question_set', JSON.stringify(defaultQuestionSet));
+          router.push(`/evaluate?version=${version}&bucket=0&ids=${defaultQuestionSet.join(',')}`);
+          return;
+        }
       }
 
       // v1 逻辑（已废弃，保留兼容）
@@ -160,10 +213,10 @@ export default function SelectQuestionsPage() {
 
   // 根据版本动态计算题目数量和模型数量
   const isV2 = version === 'v2';
-  // v2 专用配置：18 道题、8 个模型、预计 120 分钟；v1 保持原有配置
-  const bucketSize = isV2 ? 18 : 18; // v1: BUCKET_MATRIX 中题包大小约 17-18；v2: 18 道题
-  const modelCount = isV2 ? 8 : 8;   // v1/v2 均为 8 个模型回答
-  const estimatedTime = isV2 ? '120' : '15-20';
+  // v2 新配置：4 道题（1个固定题 + 3个随机题）、4 个模型、预计 30 分钟；v1 保持原有配置
+  const bucketSize = isV2 ? 4 : 18; // v1: BUCKET_MATRIX 中题包大小约 17-18；v2: 4 道题
+  const modelCount = isV2 ? 4 : 8;   // v1: 8 个模型回答；v2: 4 个模型回答
+  const estimatedTime = isV2 ? '30' : '15-20';
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">

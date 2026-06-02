@@ -141,8 +141,8 @@ function GuidancePageInner() {
             <div>
               <h3 className="font-semibold mb-2">📊 您将要做什么？</h3>
               <ul className="space-y-1 ml-4">
-                <li>• 查看{isV2 ? '18' : '约60'}个金融投资相关问题</li>
-                <li>• 每个问题有 8 个不同AI模型的回答</li>
+                <li>• 查看{isV2 ? '3' : '约60'}个金融投资相关问题</li>
+                <li>• 每个问题有 4 个不同AI模型的回答</li>
                 <li>• 对每个回答进行1-10分评分</li>
                 {isV2 ? (
                   <li>• 从六个维度评估回答中的错误严重程度</li>
@@ -154,7 +154,7 @@ function GuidancePageInner() {
             <div>
               <h3 className="font-semibold mb-2">⏱️ 预计用时与建议</h3>
               <ul className="space-y-1 ml-4">
-                <li>• 总时长：{isV2 ? '约120' : '30-45'}分钟</li>
+                <li>• 总时长：{isV2 ? '约10+' : '30-45'}分钟</li>
                 <li>• 可随时保存进度并继续</li>
                 <li>• 建议先浏览所有回答再评分</li>
                 <li>• 保持客观，基于专业标准评判</li>

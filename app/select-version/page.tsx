@@ -122,7 +122,7 @@ export default function SelectVersionPage() {
               </li>
               <li className="flex items-center">
                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2" />
-                每道题 8 个匿名模型回答
+                每道题 4 个匿名模型回答
               </li>
             </ul>
             <div className="text-green-600 font-semibold text-sm group-hover:underline">

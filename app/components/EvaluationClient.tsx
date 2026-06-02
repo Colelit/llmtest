@@ -242,14 +242,19 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
   };
 
   const isEvaluationComplete = () => {
-    return Object.values(evaluations).every(questionEvals =>
-      Object.values(questionEvals).every(modelEval => modelEval.score > 0)
+    // q0 可选，只检查其他题目
+    const nonQ0Questions = allQuestions.filter(q => q.id !== 'q0');
+    return nonQ0Questions.every(q =>
+      q.answers.every(a => evaluations[q.id]?.[a.modelId]?.score > 0)
     );
   };
   // 新增：生成未完成评分的详细提示
   const getIncompleteMessage = () => {
     const items: string[] = [];
-    allQuestions.forEach((q, idx) => {
+    // 跳过 q0，只检查其他题目
+    const nonQ0Questions = allQuestions.filter(q => q.id !== 'q0');
+
+    nonQ0Questions.forEach((q, idx) => {
       const missing = q.answers
         .filter(a => !evaluations[q.id] || !evaluations[q.id][a.modelId] || evaluations[q.id][a.modelId].score <= 0)
         .map(a => getAnonymousModelName(a.modelId));
@@ -489,6 +494,11 @@ export default function EvaluationClient({ allQuestions, version = 'v1' }: { all
                   题目 {currentQuestionIndex + 1}/{allQuestions.length}:
                 </h1>
                 <p className="mt-1 text-sm md:text-base text-gray-600">{currentQuestion.text}</p>
+                {currentQuestion.id === 'q0' && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-300 rounded-md text-sm text-yellow-800">
+                    ⚠️ <strong>此题为非必选题</strong>，您可以选择跳过，完成后续3道题目即可提交问卷。
+                  </div>
+                )}
               </div>
             </div>
 
